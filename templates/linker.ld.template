@@ -1,0 +1,44 @@
+ENTRY({ENTRY_POINT})
+
+MEMORY
+{{
+    SRAM (rwx) : ORIGIN = {BASE_ADDRESS}, LENGTH = {MEMORY_SIZE}
+}}
+
+SECTIONS
+{{
+    .text {BASE_ADDRESS} : ALIGN(4)
+    {{
+        *(.text.{ENTRY_POINT})
+        *(.text*)
+        *(.literal*)
+    }} > SRAM
+
+    .rodata : ALIGN(4)
+    {{
+        *(.rodata*)
+    }} > SRAM
+
+    .data : ALIGN(4)
+    {{
+        *(.data*)
+    }} > SRAM
+
+    .bss : ALIGN(4)
+    {{
+        __bss_start = .;
+        *(.bss*)
+        *(COMMON)
+        __bss_end = .;
+    }} > SRAM
+    
+    __binary_end = .;
+
+    /DISCARD/ :
+    {{
+        *(.comment)
+        *(.note*)
+        *(.eh_frame*)
+        *(.riscv.attributes)
+    }}
+}}

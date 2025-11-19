@@ -1,0 +1,55 @@
+toolchain:
+  path: "C:/Espressif/tools/riscv32-esp-elf/esp-14.2.0_20241119/riscv32-esp-elf/bin"
+  prefix: "riscv32-esp-elf"
+  compilers:
+    gcc: "riscv32-esp-elf-gcc"
+    g++: "riscv32-esp-elf-g++"
+    as: "riscv32-esp-elf-as"
+
+# Extensions configuration for multi-file compilation
+extensions:
+  # Source files that need compilation (extension -> compiler mapping)
+  compile:
+    ".c": "gcc"       # C source files
+    ".cpp": "g++"     # C++ source files
+    ".cc": "g++"      # C++ source files (alternative extension)
+    ".cxx": "g++"     # C++ source files (alternative extension)
+    ".S": "gcc"       # Assembly with C preprocessor (capital S)
+  
+  # Header files (for documentation only, not compiled)
+  headers:
+    - ".h"            # C header files
+    - ".hpp"          # C++ header files
+    - ".hh"           # C++ header files (alternative)
+    - ".hxx"          # C++ header files (alternative)
+
+compiler:
+  # ISA extensions:
+  # rv32imafc: Base ISA + M(multiply) + A(atomic) + F(float) + C(compressed)
+  # zicsr: CSR (Control and Status Register) instructions
+  # zifencei: Instruction fence for self-modifying code
+  # zcb, zcmp: Additional compressed instruction extensions
+  # xesppie: ESP32-P4 custom PIE (Programmable Instruction Extensions)
+  arch: "rv32imafc_zicsr_zifencei_xesppie"
+  abi: "ilp32f"
+  optimization: "O3"
+  flags:
+    - "-nostdlib"
+    - "-ffreestanding"
+    - "-fno-builtin"
+    - "-ffunction-sections"
+    - "-fdata-sections"
+    - "-msmall-data-limit=0"
+
+linker:
+  garbage_collection: true
+  flags:
+    - "-nostdlib"
+
+memory:
+  max_size: "128K"
+  alignment: 4
+
+build:
+  output_dir: "build"
+  generate_debug: true
