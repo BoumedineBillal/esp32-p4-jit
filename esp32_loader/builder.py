@@ -9,6 +9,7 @@ from .binary_processor import BinaryProcessor
 from .symbol_extractor import SymbolExtractor
 from .validator import Validator
 from .binary_object import BinaryObject
+from .wrapper_builder import WrapperBuilder
 
 
 class Builder:
@@ -48,6 +49,9 @@ class Builder:
         self.validator = Validator(self.config)
         
         self.temp_dir = tempfile.mkdtemp(prefix='esp32_build_')
+        
+        # Add wrapper builder for automatic wrapper generation
+        self.wrapper = WrapperBuilder(self, self.config)
         
     def _load_config(self, config_path):
         """Load YAML configuration file."""

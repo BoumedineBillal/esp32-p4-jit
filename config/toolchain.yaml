@@ -53,3 +53,10 @@ memory:
 build:
   output_dir: "build"
   generate_debug: true
+
+# Wrapper generation configuration
+wrapper:
+  template_file: "temp.c"           # Generated wrapper filename
+  wrapper_entry: "call_remote"      # Wrapper function name
+  args_array_size: 32               # Array size in 4-byte units (32 slots = 128 bytes)
+                                    # Last slot [31] reserved for return value
