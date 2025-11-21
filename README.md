@@ -1,658 +1,312 @@
-# ESP32-P4 JIT - Dynamic Code Loader
+# ESP32-P4 JIT: The Complete Technical Manual
 
-Production-grade build system for compiling position-specific RISC-V binaries for ESP32-P4 dynamic code loading with automatic wrapper generation for memory-mapped I/O communication.
-
-## Table of Contents
-
-- [Features](#features)
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Basic Compilation](#basic-compilation)
-  - [Wrapper Generation](#wrapper-generation)
-  - [Multi-File Projects](#multi-file-projects)
-- [Configuration](#configuration)
-- [API Reference](#api-reference)
-- [Memory-Mapped I/O Protocol](#memory-mapped-io-protocol)
-- [Architecture](#architecture)
-- [Examples](#examples)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
+**Version**: 1.0.0
+**Target Architecture**: RISC-V (ESP32-P4)
+**License**: MIT
 
 ---
 
-## Features
+## 📖 Table of Contents
 
-### Core Build System
-- **Standard Compilation**: Uses normal optimization (-O2/-O3) with standard GCC flags
-- **Entry Point Specification**: Specify entry point at build time, not in source
-- **BSS Padding**: Automatically pads BSS sections for single `memcpy()` loading
-- **Template-Based Linker**: Generates custom linker scripts from templates
-- **Multi-File Support**: Automatic discovery and compilation of C, C++, and assembly files
-- **Comprehensive Validation**: Validates addresses, alignment, and sizes
-- **Rich Metadata**: JSON metadata with all addresses and symbols
-
-### Automatic Wrapper Generation (NEW)
-- **Function Signature Parsing**: Extracts function signatures from C source files
-- **Auto-Generated Headers**: Creates header files with typedefs and declarations
-- **Memory-Mapped I/O Wrapper**: Generates wrapper code for argument passing via fixed addresses
-- **Type-Safe Communication**: Handles int, float, and pointer types correctly
-- **Metadata Generation**: Creates JSON with all memory addresses and types
-
-### Supported Languages
-- **C** (`.c`) - Standard C compilation
-- **C++** (`.cpp`, `.cc`, `.cxx`) - C++ with proper linking
-- **Assembly** (`.S`) - Assembly with C preprocessor support
+1.  [Executive Summary](#1-executive-summary)
+2.  [System Architecture](#2-system-architecture)
+    *   [2.1 Host Build System (`esp32_loader`)](#21-host-build-system-esp32_loader)
+    *   [2.2 Host Runtime (`p4_jit`)](#22-host-runtime-p4_jit)
+    *   [2.3 Device Firmware (`p4_jit_firmware`)](#23-device-firmware-p4_jit_firmware)
+3.  [The JIT Workflow (The "Two-Pass" Mechanism)](#3-the-jit-workflow-the-two-pass-mechanism)
+4.  [Installation & Setup](#4-installation--setup)
+5.  [Usage Guide](#5-usage-guide)
+    *   [5.1 Hello World](#51-hello-world)
+    *   [5.2 Working with Arrays](#52-working-with-arrays)
+6.  [API Reference](#6-api-reference)
+7.  [Communication Protocol Specification](#7-communication-protocol-specification)
+8.  [Internals & Design Decisions](#8-internals--design-decisions)
+    *   [8.1 Why Position Specific Code?](#81-why-position-specific-code)
+    *   [8.2 Automatic ABI Wrapping](#82-automatic-abi-wrapping)
+    *   [8.3 Cache Coherency & Safety](#83-cache-coherency--safety)
+9.  [Troubleshooting](#9-troubleshooting)
 
 ---
 
-## Quick Start
+## 1. Executive Summary
 
-### 1. Install Dependencies
+The **ESP32-P4 JIT** is a sophisticated dynamic code loading system designed for the ESP32-P4 microcontroller. It enables developers to compile C/C++ code on a host PC and execute it natively on the ESP32-P4 without flashing the main firmware.
 
-```bash
-pip install -r requirements.txt
-```
+Unlike interpreted languages (MicroPython, Lua) or bytecode VMs (WASM), this system executes **native, optimized RISC-V machine code**. This ensures maximum performance, making it suitable for computationally intensive tasks like Digital Signal Processing (DSP), cryptography, or real-time control loops.
 
-**Requirements:**
-- Python 3.7+
-- PyYAML >= 6.0
-- pycparser >= 2.21
-- ESP-IDF toolchain (RISC-V GCC)
-
-### 2. Configure Toolchain
-
-Edit `config/toolchain.yaml`:
-
-```yaml
-toolchain:
-  path: "C:/Espressif/tools/riscv32-esp-elf/esp-14.2.0_20241119/riscv32-esp-elf/bin"
-```
-
-### 3. Run Example
-
-```bash
-cd examples
-python example_simple.py
-```
+The system handles the entire lifecycle of dynamic execution:
+1.  **Cross-Compilation**: Using the standard ESP-IDF RISC-V toolchain.
+2.  **Linking**: Generating position-specific binaries for runtime-allocated memory.
+3.  **Transport**: High-speed USB transfer.
+4.  **Execution**: Safe invocation of code with automatic cache management.
 
 ---
 
-## Installation
+## 2. System Architecture
+
+The project follows a client-server model, split across the Host (PC) and the Device (ESP32-P4).
+
+### 2.1 Host Build System (`esp32_loader`)
+This is the "Compiler Driver". It is a Python package responsible for transforming C source code into a raw binary blob ready for the device.
+
+*   **`Builder`**: The central orchestrator. It manages the build pipeline.
+*   **`Compiler`**: Wraps `riscv32-esp-elf-gcc`. It handles flag management (`-march`, `-mabi`, `-O3`) to ensure the binary is compatible with the P4's hardware.
+*   **`WrapperGenerator`**: A critical component that solves the ABI (Application Binary Interface) problem. It parses the user's C code using `pycparser`, extracts function signatures, and generates a C wrapper (`temp.c`). This wrapper reads arguments from a fixed memory buffer, casts them to the correct types, calls the user function, and writes the result back.
+*   **`LinkerGenerator`**: Dynamically creates GNU Linker scripts (`.ld`). It takes a base address as input and generates a script that links the code to run *specifically* at that address.
+*   **`BinaryProcessor`**: Extracts the `.text`, `.data`, and `.rodata` sections from the compiled ELF file. Crucially, it also handles `.bss` (uninitialized data) by appending zero-padding to the binary, ensuring that global variables are correctly initialized when loaded.
+
+### 2.2 Host Runtime (`p4_jit`)
+This is the "Client Library". It manages the connection to the device and the logic of the JIT session.
+
+*   **`DeviceManager`**: Implements the custom binary protocol over USB Serial (CDC-ACM). It maintains a **Shadow Allocation Table** on the host. This table tracks every memory region allocated on the device. If the user tries to write to or execute an address that wasn't allocated, the `DeviceManager` blocks the request locally, preventing segmentation faults or crashes on the embedded device.
+*   **`JITSession`**: Provides the high-level API. It abstracts the connection process (auto-discovery via `PING`) and the function loading process.
+
+### 2.3 Device Firmware (`p4_jit_firmware`)
+This is the "Server". It is a specialized ESP-IDF application running on the ESP32-P4.
+
+*   **USB Transport**: Built on top of **TinyUSB**. It uses FreeRTOS StreamBuffers to decouple the high-priority USB Interrupt Service Routine (ISR) from the lower-priority protocol task. This ensures that even if the protocol task is busy, incoming USB data is buffered and not lost.
+*   **Command Dispatcher**: Parses incoming packets and executes commands (`ALLOC`, `WRITE`, `EXEC`).
+*   **Memory Manager**: Wraps `heap_caps_aligned_alloc` to provide memory from specific regions (PSRAM vs SRAM) with specific capabilities (Executable, DMA-capable, etc.).
+
+---
+
+## 3. The JIT Workflow (The "Two-Pass" Mechanism)
+
+A fundamental challenge in dynamic loading is **Address Resolution**. When code is compiled, jumps and data references must point to valid memory addresses.
+*   **Static Linking**: Addresses are known at compile time (standard firmware).
+*   **Position Independent Code (PIC)**: Addresses are calculated relative to the Program Counter (PC). This is complex on embedded systems (requires GOT/PLT).
+*   **Position Specific Code**: Code is linked for a specific address. This is efficient but requires knowing the address *before* linking.
+
+We chose **Position Specific Code** for performance and simplicity. This necessitates a **Two-Pass Workflow**:
+
+### Phase 1: The Probe (Discovery)
+1.  **Compile**: The host compiles the code using a **Dummy Address** (e.g., `0x00000000`).
+2.  **Measure**: The resulting binary is invalid for execution, but its **Size** is correct. We extract:
+    *   `Code Size`: Total size of instructions + data + BSS.
+    *   `Args Size`: Size needed for the argument passing buffer.
+
+### Phase 2: Allocation (Reservation)
+1.  **Request**: The host sends an `ALLOC` command to the device for the measured sizes.
+2.  **Allocate**: The device allocates memory in the requested region (e.g., PSRAM).
+3.  **Return**: The device returns the **Physical Addresses** (e.g., Code=`0x40081234`, Args=`0x3FC05678`).
+
+### Phase 3: The Final Build (Linking)
+1.  **Re-Compile**: The host recompiles the *exact same source*.
+2.  **Link**: The `LinkerGenerator` creates a script with `ORIGIN = 0x40081234`.
+3.  **Output**: The linker resolves all symbols relative to `0x40081234`. The binary is now valid.
+
+### Phase 4: Execution (Runtime)
+1.  **Upload**: The host writes the binary to `0x40081234`.
+2.  **Execute**: The host sends an `EXEC` command. The device jumps to `0x40081234`.
+
+---
+
+## 4. Installation & Setup
 
 ### Prerequisites
+*   **Hardware**: ESP32-P4 Development Board.
+*   **OS**: Windows, Linux, or macOS.
+*   **Software**:
+    *   Python 3.7+
+    *   ESP-IDF v5.x (must include RISC-V toolchain).
 
-**ESP-IDF Installation:**
-1. Install ESP-IDF v5.x or later
-2. Ensure RISC-V toolchain is in PATH
-3. Verify installation:
-   ```bash
-   riscv32-esp-elf-gcc --version
-   ```
+### Step 1: Host Setup
+1.  Clone the repository.
+2.  Install Python dependencies:
+    ```bash
+    pip install -r requirements.txt
+    ```
+3.  Configure the toolchain in `config/toolchain.yaml`:
+    ```yaml
+    toolchain:
+      path: "C:/Espressif/tools/riscv32-esp-elf/esp-13.2.0_20230928/riscv32-esp-elf/bin"
+      prefix: "riscv32-esp-elf"
+    ```
 
-**Python Environment:**
-```bash
-# Create virtual environment (recommended)
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-
-# Install dependencies
-pip install -r requirements.txt
-```
+### Step 2: Device Setup
+1.  Navigate to the firmware directory:
+    ```bash
+    cd p4_jit_firmware
+    ```
+2.  Set the target:
+    ```bash
+    idf.py set-target esp32p4
+    ```
+3.  Build and Flash:
+    ```bash
+    idf.py build flash monitor
+    ```
+    *Note: Keep the monitor open to see debug logs from the device.*
 
 ---
 
-## Usage
+## 5. Usage Guide
 
-### Basic Compilation
-
-Compile a single C function for dynamic loading:
+### 5.1 Hello World (Simple Calculation)
 
 ```python
 from esp32_loader import Builder
+from p4_jit import JITSession
+from p4_jit.memory_caps import MALLOC_CAP_SPIRAM, MALLOC_CAP_8BIT
+import struct
 
+# 1. Connect
+session = JITSession()
+session.connect()
+
+# 2. Create Source
+with open("math.c", "w") as f:
+    f.write("int add(int a, int b) { return a + b; }")
+
+# 3. Probe (Pass 1)
 builder = Builder()
-
-binary = builder.build(
-    source='sources/my_function.c',
-    entry_point='my_function',
-    base_address=0x40800000
+temp_bin = builder.wrapper.build_with_wrapper(
+    source="math.c", function_name="add",
+    base_address=0, arg_address=0
 )
 
-# Save binary
-binary.save_bin('output/my_function.bin')
-binary.save_metadata('output/metadata.json')
+# 4. Allocate
+# Code needs EXEC capability. Args need DATA capability.
+code_addr = session.device.allocate(temp_bin.total_size + 64, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT, 128)
+args_addr = session.device.allocate(128, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT, 128)
 
-# Inspect
-print(f"Entry: 0x{binary.entry_address:08x}")
-print(f"Size: {binary.total_size} bytes")
-binary.print_sections()
-binary.print_symbols()
-```
-
-### Wrapper Generation
-
-Automatically generate memory-mapped I/O wrapper for any function:
-
-```python
-from esp32_loader import Builder
-
-builder = Builder()
-
-# Automatic wrapper generation
-binary = builder.wrapper.build_with_wrapper(
-    source='sources/compute.c',
-    function_name='compute2',       # Function to wrap
-    base_address=0x40800000,        # Code load address
-    arg_address=0x50000000          # I/O region for arguments
+# 5. Final Build (Pass 2)
+final_bin = builder.wrapper.build_with_wrapper(
+    source="math.c", function_name="add",
+    base_address=code_addr, arg_address=args_addr
 )
 
-# Generated files:
-# - sources/compute.h      (function declaration + typedefs)
-# - sources/temp.c         (wrapper code)
-# - output/signature.json  (memory layout metadata)
+# 6. Upload & Load
+remote_func = session.load_function(final_bin, args_addr)
+
+# 7. Execute
+# Pack arguments: two integers (4 bytes each)
+args = struct.pack("<ii", 10, 20)
+remote_func(args)
+
+# 8. Read Result
+# Result is always at the last 4 bytes of the args buffer (slot 31)
+res_bytes = session.device.read_memory(args_addr + 124, 4)
+result = struct.unpack("<i", res_bytes)[0]
+print(f"10 + 20 = {result}")
 ```
 
-**Example Function:**
+### 5.2 Working with Arrays
 
-```c
-// compute.c
-float compute2(int32_t a, float b, int32_t* c, int8_t d) {
-    return (a + b) * counter + c[2] - d;
-}
-```
-
-**Runtime Usage (ESP32-P4 Main Firmware):**
-
-```c
-volatile int32_t *io = (volatile int32_t *)0x50000000;
-
-// Write arguments to memory-mapped region
-io[0] = 42;                          // a (int32_t)
-io[1] = *(int32_t*)&3.14f;           // b (float, bit reinterpretation)
-io[2] = (int32_t)buffer_ptr;         // c (pointer)
-io[3] = 5;                           // d (int8_t)
-
-// Call dynamically loaded function
-typedef esp_err_t (*wrapper_func_t)(void);
-wrapper_func_t call_remote = (wrapper_func_t)0x40800000;
-esp_err_t status = call_remote();
-
-// Read result from last slot
-float result = *(float*)&io[31];
-```
-
-### Multi-File Projects
-
-The builder automatically discovers and compiles all source files in the same directory:
-
-```
-sources/
-  ├── main.c           # Entry point
-  ├── utils.c          # Utility functions
-  ├── utils.h          # Header file
-  ├── math_ops.cpp     # C++ implementation
-  └── vector.S         # Assembly code
-```
+Passing pointers requires allocating the data buffer on the device first.
 
 ```python
-builder = Builder()
+# 1. Prepare Data
+data = [1, 2, 3, 4]
+data_bytes = struct.pack("<4i", *data)
 
-# Automatically compiles ALL files in sources/
-binary = builder.build(
-    source='sources/main.c',    # Entry file determines directory
-    entry_point='main',
-    base_address=0x40800000
-)
+# 2. Allocate Data Buffer
+data_addr = session.device.allocate(len(data_bytes), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT, 128)
+session.device.write_memory(data_addr, data_bytes)
+
+# 3. Compile Function
+# int sum(int *arr, int len) { ... }
+# ... (Two-Pass Build omitted for brevity) ...
+
+# 4. Call
+# Pass the POINTER (address) and LENGTH
+args = struct.pack("<Ii", data_addr, 4)
+remote_func(args)
 ```
 
 ---
 
-## Configuration
+## 6. API Reference
 
-### Toolchain Configuration (`config/toolchain.yaml`)
+### `esp32_loader.builder.Builder`
+*   `__init__(config_path)`: Load toolchain config.
+*   `build(source, output, ...)`: Low-level compile.
+*   `wrapper.build_with_wrapper(source, function_name, base_address, arg_address)`: High-level build with ABI wrapper.
 
-```yaml
-toolchain:
-  path: "path/to/riscv32-esp-elf/bin"
-  prefix: "riscv32-esp-elf"
-  compilers:
-    gcc: "riscv32-esp-elf-gcc"
-    g++: "riscv32-esp-elf-g++"
-    as: "riscv32-esp-elf-as"
+### `p4_jit.jit_session.JITSession`
+*   `connect(port=None)`: Connect to device.
+*   `load_function(binary_object, args_addr)`: Upload binary and return `RemoteFunction` handle.
 
-compiler:
-  arch: "rv32imafc_zicsr_zifencei_xesppie"  # ESP32-P4 ISA
-  abi: "ilp32f"                              # ABI with float support
-  optimization: "O3"                         # Optimization level
-  flags:
-    - "-nostdlib"
-    - "-ffreestanding"
-    - "-fno-builtin"
-    - "-ffunction-sections"
-    - "-fdata-sections"
-    - "-msmall-data-limit=0"
-
-memory:
-  max_size: "128K"      # Maximum binary size
-  alignment: 4          # Memory alignment (bytes)
-
-# Wrapper generation settings
-wrapper:
-  template_file: "temp.c"           # Generated wrapper filename
-  wrapper_entry: "call_remote"      # Wrapper function name
-  args_array_size: 32               # Argument slots (32 × 4 = 128 bytes)
-                                    # Last slot reserved for return value
-```
-
-### ISA Extensions Explained
-
-- `rv32imafc`: Base ISA with multiply, atomic, float, compressed instructions
-- `zicsr`: Control and Status Register instructions
-- `zifencei`: Instruction fence for self-modifying code
-- `xesppie`: ESP32-P4 custom Programmable Instruction Extensions
+### `p4_jit.device_manager.DeviceManager`
+*   `allocate(size, caps, alignment)`: Request memory.
+*   `free(address)`: Release memory.
+*   `write_memory(address, data)`: Write binary data.
+*   `read_memory(address, size)`: Read binary data.
+*   `execute(address)`: Transfer control to address.
 
 ---
 
-## API Reference
+## 7. Communication Protocol Specification
 
-### Builder Class
+The protocol is a request-response binary protocol over USB CDC-ACM.
 
-```python
-class Builder:
-    def __init__(self, config_path='config/toolchain.yaml'):
-        """Initialize builder with configuration."""
-        
-    def build(self, source, entry_point, base_address, 
-              optimization=None, output_dir='build'):
-        """
-        Build position-specific binary.
-        
-        Args:
-            source: Path to entry source file
-            entry_point: Entry point function name
-            base_address: Load address (int or hex string)
-            optimization: Override optimization level
-            output_dir: Output directory
-            
-        Returns:
-            BinaryObject: Compiled binary with metadata
-        """
+**Endianness**: Little-Endian
+**Packet Format**:
+```
+| Offset | Field    | Size | Description |
+|:-------|:---------|:-----|:------------|
+| 0      | Magic    | 2    | 0xA5 0x5A   |
+| 2      | Cmd ID   | 1    | Command ID  |
+| 3      | Flags    | 1    | 0x00=Req, 0x01=OK, 0x02=Err |
+| 4      | Length   | 4    | Payload Length (N) |
+| 8      | Payload  | N    | Data |
+| 8+N    | Checksum | 2    | Sum(Header + Payload) |
 ```
 
-### WrapperBuilder Class
-
-```python
-builder.wrapper.build_with_wrapper(
-    source,              # Original source file
-    function_name,       # Function to wrap
-    base_address,        # Code load address
-    arg_address,         # I/O region base address (REQUIRED)
-    output_dir='build'   # Output directory
-)
-```
-
-### BinaryObject Methods
-
-```python
-# Properties
-binary.data                # Raw binary data (bytes)
-binary.total_size          # Total size including BSS
-binary.base_address        # Load address
-binary.entry_address       # Entry point address
-binary.functions           # List of all functions
-
-# Save methods
-binary.save_bin(path)           # Save binary file
-binary.save_elf(path)           # Save ELF with debug symbols
-binary.save_metadata(path)      # Save JSON metadata
-
-# Inspection methods
-binary.print_sections()         # Print section table
-binary.print_symbols()          # Print symbol table
-binary.print_memory_map()       # Visual memory map
-binary.disassemble(output)      # Disassemble code
-
-# Utility methods
-binary.get_data()                      # Get raw bytes
-binary.get_metadata_dict()             # Get metadata as dict
-binary.get_function_address(name)      # Get function address
-binary.validate()                      # Validate binary
-```
+**Commands**:
+*   **PING (0x01)**: Echo payload.
+*   **ALLOC (0x10)**:
+    *   Req: `Size(4) | Caps(4) | Align(4)`
+    *   Resp: `Addr(4) | Error(4)`
+*   **FREE (0x11)**:
+    *   Req: `Addr(4)`
+    *   Resp: `Status(4)`
+*   **WRITE (0x20)**:
+    *   Req: `Addr(4) | Data(N)`
+    *   Resp: `Written(4) | Status(4)`
+*   **READ (0x21)**:
+    *   Req: `Addr(4) | Size(4)`
+    *   Resp: `Data(N)`
+*   **EXEC (0x30)**:
+    *   Req: `Addr(4)`
+    *   Resp: `RetVal(4)`
 
 ---
 
-## Memory-Mapped I/O Protocol
+## 8. Internals & Design Decisions
 
-### Memory Layout
+### 8.1 Why Position Specific Code?
+We avoided Position Independent Code (PIC) because:
+1.  **Performance**: PIC requires indirect addressing via a Global Offset Table (GOT), which adds instruction overhead.
+2.  **Complexity**: Implementing a dynamic linker on the ESP32 to resolve GOT entries at runtime is complex and error-prone.
+3.  **Simplicity**: By linking for a specific address, we get standard, optimized machine code that just works, provided we load it at the right place.
 
-```
-Base Address: 0x50000000 (configurable)
-Array Size: 32 slots × 4 bytes = 128 bytes
+### 8.2 Automatic ABI Wrapping
+The ESP32-P4 uses the RISC-V ILP32F ABI (arguments in registers `a0`-`a7`, `fa0`-`fa7`). Python cannot easily set CPU registers remotely.
+**Solution**: We use a "Shared Memory" approach.
+1.  Host writes args to a memory buffer.
+2.  We generate a C wrapper that:
+    *   Reads from the buffer.
+    *   Casts data to the correct types (handling float bit-patterns).
+    *   Calls the target function (compiler handles register allocation).
+    *   Writes the result back to the buffer.
 
-Address          Index    Usage
-─────────────────────────────────────────
-0x50000000       [0]      Argument 0
-0x50000004       [1]      Argument 1
-0x50000008       [2]      Argument 2
-0x5000000c       [3]      Argument 3
-...
-0x50000078       [30]     Argument 30
-0x5000007c       [31]     RETURN VALUE (last slot)
-```
-
-### Type Handling
-
-**Value Types (int, float):**
-```c
-// Write
-io[0] = 42;                          // int32_t
-io[1] = *(int32_t*)&3.14f;           // float (reinterpret bits)
-
-// Read
-int32_t x = io[0];
-float y = *(float*)&io[1];
-```
-
-**Pointer Types:**
-```c
-// Write
-io[2] = (int32_t)buffer_ptr;         // Cast pointer to int
-
-// Read
-int32_t* ptr = (int32_t*)io[2];      // Cast int to pointer
-```
-
-### signature.json Format
-
-```json
-{
-  "function": {
-    "name": "compute2",
-    "return_type": "float",
-    "wrapper_entry": "call_remote"
-  },
-  "addresses": {
-    "code_base": "0x40800000",
-    "arg_base": "0x50000000",
-    "args_array_size": 32,
-    "args_array_bytes": 128
-  },
-  "arguments": [
-    {
-      "index": 0,
-      "name": "a",
-      "type": "int32_t",
-      "category": "value",
-      "address": "0x50000000"
-    }
-  ],
-  "result": {
-    "type": "float",
-    "index": 31,
-    "address": "0x5000007c"
-  }
-}
-```
+### 8.3 Cache Coherency & Safety
+The ESP32-P4 has separate Instruction (I) and Data (D) caches.
+*   When we `WRITE` code, it goes through the D-Cache to RAM.
+*   The I-Cache might still contain stale data for that address.
+*   **Critical Step**: The firmware calls `esp_cache_msync()` with `ESP_CACHE_MSYNC_FLAG_INVALIDATE`. This forces the D-Cache to flush to RAM and invalidates the I-Cache, ensuring the CPU fetches the new instructions.
 
 ---
 
-## Architecture
+## 9. Troubleshooting
 
-### Directory Structure
-
-```
-P4-JIT/
-├── config/
-│   └── toolchain.yaml              # Build configuration
-├── esp32_loader/                   # Main package
-│   ├── __init__.py
-│   ├── builder.py                  # Build orchestrator
-│   ├── compiler.py                 # Compilation & linking
-│   ├── linker_gen.py               # Linker script generator
-│   ├── binary_processor.py         # Section extraction & BSS padding
-│   ├── symbol_extractor.py         # Symbol table parsing
-│   ├── validator.py                # Input validation
-│   ├── binary_object.py            # Result object API
-│   ├── signature_parser.py         # C function signature parser
-│   ├── header_generator.py         # Header file generator
-│   ├── wrapper_generator.py        # Wrapper code generator
-│   ├── wrapper_builder.py          # Wrapper build orchestrator
-│   └── metadata_generator.py       # JSON metadata generator
-├── templates/
-│   └── linker.ld.template          # Linker script template
-├── test/
-│   ├── test_single_file/           # Single file compilation test
-│   ├── test_multi_file/            # Multi-file compilation test
-│   └── test_wrapper/               # Wrapper generation test
-├── examples/
-│   ├── example_simple.py           # Basic usage example
-│   └── sources/
-│       └── compute.c               # Example source
-├── requirements.txt                # Python dependencies
-└── README.md                       # This file
-```
-
-### Build Flow
-
-**Basic Compilation:**
-```
-1. Load configuration
-2. Validate inputs (source, entry point, address)
-3. Discover source files in directory
-4. Compile each file → object files
-5. Generate linker script
-6. Link object files → ELF
-7. Extract binary sections
-8. Pad BSS with zeros
-9. Extract symbols and addresses
-10. Return BinaryObject
-```
-
-**Wrapper Generation:**
-```
-1. Parse function signature (pycparser)
-2. Extract typedefs from source
-3. Generate header file (.h)
-4. Generate wrapper code (temp.c)
-5. Compile wrapper + original source
-6. Link (no duplicate symbols)
-7. Generate signature.json
-8. Return BinaryObject
-```
+| Error | Likely Cause | Solution |
+|:------|:-------------|:---------|
+| `Device not connected` | USB issue or Port busy | Check cable, close other terminals (Putty/TeraTerm). |
+| `PermissionError` | Host-side safety check | You are writing to an address you didn't `allocate()`. |
+| `IllegalInstruction` | Cache incoherency | Ensure `esp_cache_msync` is working. Check `-march` in config. |
+| `LoadProhibited` | Null pointer dereference | Check your C code. |
+| `Linker Error` | Code size > Allocation | Increase allocation size (add padding). |
 
 ---
-
-## Examples
-
-### Example 1: Simple Function
-
-```c
-// sources/add.c
-int32_t add(int32_t a, int32_t b) {
-    return a + b;
-}
-```
-
-```python
-from esp32_loader import Builder
-
-builder = Builder()
-binary = builder.build(
-    source='sources/add.c',
-    entry_point='add',
-    base_address=0x40800000
-)
-
-binary.save_bin('output/add.bin')
-```
-
-### Example 2: Function with Wrapper
-
-```c
-// sources/filter.c
-float lowpass_filter(float input, float cutoff, float* state) {
-    *state = *state * (1.0f - cutoff) + input * cutoff;
-    return *state;
-}
-```
-
-```python
-from esp32_loader import Builder
-
-builder = Builder()
-binary = builder.wrapper.build_with_wrapper(
-    source='sources/filter.c',
-    function_name='lowpass_filter',
-    base_address=0x40800000,
-    arg_address=0x50000000
-)
-
-# Generated: filter.h, temp.c, signature.json
-binary.save_bin('output/filter.bin')
-```
-
-### Example 3: Multi-File Project
-
-```c
-// sources/main.c
-#include "dsp.h"
-
-void process_audio(float* buffer, int size) {
-    for (int i = 0; i < size; i++) {
-        buffer[i] = apply_filter(buffer[i]);
-    }
-}
-```
-
-```c
-// sources/dsp.c
-#include "dsp.h"
-
-float apply_filter(float sample) {
-    // DSP implementation
-    return sample * 0.5f;
-}
-```
-
-```python
-builder = Builder()
-binary = builder.build(
-    source='sources/main.c',  # Entry file
-    entry_point='process_audio',
-    base_address=0x40800000
-)
-# Automatically compiles main.c and dsp.c
-```
-
----
-
-## Troubleshooting
-
-### Import Error
-
-**Problem:** `ModuleNotFoundError: No module named 'esp32_loader'`
-
-**Solution:** Ensure you're in the correct directory or add to path:
-```python
-import sys
-import os
-sys.path.insert(0, os.path.dirname(__file__))
-```
-
-### Toolchain Not Found
-
-**Problem:** Compilation fails with toolchain errors
-
-**Solutions:**
-1. Verify ESP-IDF installation
-2. Check toolchain path in `config/toolchain.yaml`
-3. Run from ESP-IDF environment:
-   - Windows: ESP-IDF Command Prompt
-   - Linux: `source ~/esp/esp-idf/export.sh`
-
-### Entry Point Not Found
-
-**Problem:** `Entry point 'function_name' not found in compiled binary`
-
-**Solutions:**
-1. Verify function name matches exactly
-2. Ensure function is not `static`
-3. Check function isn't optimized away (use `__attribute__((used))`)
-
-### Duplicate Symbol Error
-
-**Problem:** `multiple definition of 'function_name'`
-
-**Cause:** Wrapper system includes source file, and builder also compiles it
-
-**Solution:** This is automatically handled by header generation. If you see this error:
-1. Delete old `temp.c` files
-2. Ensure you're using the latest wrapper generator
-3. Check that generated header exists
-
-### Memory Alignment Error
-
-**Problem:** `Address 0xXXXXXXXX not 4-byte aligned`
-
-**Solution:** Use addresses divisible by 4:
-- ✓ `0x40800000`
-- ✓ `0x40800004`
-- ✗ `0x40800003` (not aligned)
-
-### Arguments Exceed Array Size
-
-**Problem:** `Function has X parameters but args array supports max Y arguments`
-
-**Solution:** Increase `args_array_size` in config:
-```yaml
-wrapper:
-  args_array_size: 64  # Increase from 32 to 64
-```
-
----
-
-## Performance Notes
-
-### Binary Size
-- Typical wrapper overhead: ~30-40 bytes
-- Memory-mapped I/O: ~14 bytes overhead
-- Total wrapper size: ~100-200 bytes (depends on arg count)
-
-### Execution Speed
-- Wrapper overhead: ~10-20 CPU cycles
-- Memory access latency: 4-16 cycles (cached vs uncached)
-- Total overhead: ~30-50 cycles per call
-
-### Optimization Tips
-1. Use `-O3` for maximum performance
-2. Keep functions in same translation unit when possible
-3. Use `inline` for small wrapper functions
-4. Align memory-mapped regions to cache lines
-
----
-
-## License
-
-MIT License
-
-Copyright (c) 2025 BoumedineBillal
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
