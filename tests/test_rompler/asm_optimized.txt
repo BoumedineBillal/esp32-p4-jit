@@ -1,0 +1,299 @@
+
+C:\Users\orani\AppData\Local\Temp\esp32_build_byamq9v6\output.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+4ff2cd80 <dsps_biquad_f32_cascade3_arp4>:
+4ff2cd80:	7179                	addi	sp,sp,-48
+4ff2cd82:	e022                	fsw	fs0,0(sp)
+4ff2cd84:	e226                	fsw	fs1,4(sp)
+4ff2cd86:	e44a                	fsw	fs2,8(sp)
+4ff2cd88:	e64e                	fsw	fs3,12(sp)
+4ff2cd8a:	e852                	fsw	fs4,16(sp)
+4ff2cd8c:	ea56                	fsw	fs5,20(sp)
+4ff2cd8e:	6208                	flw	fa0,0(a2)
+4ff2cd90:	624c                	flw	fa1,4(a2)
+4ff2cd92:	6610                	flw	fa2,8(a2)
+4ff2cd94:	6654                	flw	fa3,12(a2)
+4ff2cd96:	6a18                	flw	fa4,16(a2)
+4ff2cd98:	20d696d3          	fneg.s	fa3,fa3
+4ff2cd9c:	20e71753          	fneg.s	fa4,fa4
+4ff2cda0:	6280                	flw	fs0,0(a3)
+4ff2cda2:	62c4                	flw	fs1,4(a3)
+4ff2cda4:	00072907          	flw	fs2,0(a4)
+4ff2cda8:	00472987          	flw	fs3,4(a4)
+4ff2cdac:	0007aa07          	flw	fs4,0(a5)
+4ff2cdb0:	0047aa87          	flw	fs5,4(a5)
+4ff2cdb4:	0315c02b          	esp.lp.setup	0,a1,98 # 4ff2ce16 <.cascade3_loop_end>
+4ff2cdb8:	00052007          	flw	ft0,0(a0)
+4ff2cdbc:	00d47043          	fmadd.s	ft0,fs0,fa3,ft0
+4ff2cdc0:	1085f0d3          	fmul.s	ft1,fa1,fs0
+4ff2cdc4:	00e4f043          	fmadd.s	ft0,fs1,fa4,ft0
+4ff2cdc8:	08a070c3          	fmadd.s	ft1,ft0,fa0,ft1
+4ff2cdcc:	089670c3          	fmadd.s	ft1,fa2,fs1,ft1
+4ff2cdd0:	208404d3          	fmv.s	fs1,fs0
+4ff2cdd4:	20000453          	fmv.s	fs0,ft0
+4ff2cdd8:	08d970c3          	fmadd.s	ft1,fs2,fa3,ft1
+4ff2cddc:	1125f153          	fmul.s	ft2,fa1,fs2
+4ff2cde0:	08e9f0c3          	fmadd.s	ft1,fs3,fa4,ft1
+4ff2cde4:	10a0f143          	fmadd.s	ft2,ft1,fa0,ft2
+4ff2cde8:	11367143          	fmadd.s	ft2,fa2,fs3,ft2
+4ff2cdec:	212909d3          	fmv.s	fs3,fs2
+4ff2cdf0:	20108953          	fmv.s	fs2,ft1
+4ff2cdf4:	10da7143          	fmadd.s	ft2,fs4,fa3,ft2
+4ff2cdf8:	1145f1d3          	fmul.s	ft3,fa1,fs4
+4ff2cdfc:	10eaf143          	fmadd.s	ft2,fs5,fa4,ft2
+4ff2ce00:	18a171c3          	fmadd.s	ft3,ft2,fa0,ft3
+4ff2ce04:	195671c3          	fmadd.s	ft3,fa2,fs5,ft3
+4ff2ce08:	214a0ad3          	fmv.s	fs5,fs4
+4ff2ce0c:	20210a53          	fmv.s	fs4,ft2
+4ff2ce10:	00352027          	fsw	ft3,0(a0)
+4ff2ce14:	0511                	addi	a0,a0,4
+
+4ff2ce16 <.cascade3_loop_end>:
+4ff2ce16:	0001                	nop
+4ff2ce18:	e280                	fsw	fs0,0(a3)
+4ff2ce1a:	e2c4                	fsw	fs1,4(a3)
+4ff2ce1c:	01272027          	fsw	fs2,0(a4)
+4ff2ce20:	01372227          	fsw	fs3,4(a4)
+4ff2ce24:	0147a027          	fsw	fs4,0(a5)
+4ff2ce28:	0157a227          	fsw	fs5,4(a5)
+4ff2ce2c:	6402                	flw	fs0,0(sp)
+4ff2ce2e:	6492                	flw	fs1,4(sp)
+4ff2ce30:	6922                	flw	fs2,8(sp)
+4ff2ce32:	69b2                	flw	fs3,12(sp)
+4ff2ce34:	6a42                	flw	fs4,16(sp)
+4ff2ce36:	6ad2                	flw	fs5,20(sp)
+4ff2ce38:	6145                	addi	sp,sp,48
+4ff2ce3a:	8082                	ret
+4ff2ce3c:	0000                	unimp
+4ff2ce3e:	0000                	unimp
+	...
+
+4ff2ce42 <fastcos>:
+4ff2ce42:	f00007d3          	fmv.w.x	fa5,zero
+4ff2ce46:	a0f517d3          	flt.s	a5,fa0,fa5
+4ff2ce4a:	c399                	beqz	a5,4ff2ce50 <fastcos+0xe>
+4ff2ce4c:	20a51553          	fneg.s	fa0,fa0
+4ff2ce50:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2ce54:	1187a787          	flw	fa5,280(a5) # 4ff2d118 <call_remote+0x1b2>
+4ff2ce58:	4709                	li	a4,2
+4ff2ce5a:	18f577d3          	fdiv.s	fa5,fa0,fa5
+4ff2ce5e:	c00797d3          	fcvt.w.s	a5,fa5,rtz
+4ff2ce62:	0ae78863          	beq	a5,a4,4ff2cf12 <fastcos+0xd0>
+4ff2ce66:	04f74b63          	blt	a4,a5,4ff2cebc <fastcos+0x7a>
+4ff2ce6a:	cfdd                	beqz	a5,4ff2cf28 <fastcos+0xe6>
+4ff2ce6c:	4705                	li	a4,1
+4ff2ce6e:	08e79f63          	bne	a5,a4,4ff2cf0c <fastcos+0xca>
+4ff2ce72:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2ce76:	1307a787          	flw	fa5,304(a5) # 4ff2d130 <call_remote+0x1ca>
+4ff2ce7a:	4ff2d737          	lui	a4,0x4ff2d
+4ff2ce7e:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2ce82:	08a7f553          	fsub.s	fa0,fa5,fa0
+4ff2ce86:	10a57553          	fmul.s	fa0,fa0,fa0
+4ff2ce8a:	1207a587          	flw	fa1,288(a5) # 4ff2d120 <call_remote+0x1ba>
+4ff2ce8e:	11c72787          	flw	fa5,284(a4) # 4ff2d11c <call_remote+0x1b6>
+4ff2ce92:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2ce96:	1247a607          	flw	fa2,292(a5) # 4ff2d124 <call_remote+0x1be>
+4ff2ce9a:	58f577c3          	fmadd.s	fa5,fa0,fa5,fa1
+4ff2ce9e:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2cea2:	1287a687          	flw	fa3,296(a5) # 4ff2d128 <call_remote+0x1c2>
+4ff2cea6:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2ceaa:	12c7a707          	flw	fa4,300(a5) # 4ff2d12c <call_remote+0x1c6>
+4ff2ceae:	60f577c3          	fmadd.s	fa5,fa0,fa5,fa2
+4ff2ceb2:	68f577c3          	fmadd.s	fa5,fa0,fa5,fa3
+4ff2ceb6:	70f5754f          	fnmadd.s	fa0,fa0,fa5,fa4
+4ff2ceba:	8082                	ret
+4ff2cebc:	470d                	li	a4,3
+4ff2cebe:	04e79763          	bne	a5,a4,4ff2cf0c <fastcos+0xca>
+4ff2cec2:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2cec6:	1347a787          	flw	fa5,308(a5) # 4ff2d134 <call_remote+0x1ce>
+4ff2ceca:	4ff2d737          	lui	a4,0x4ff2d
+4ff2cece:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2ced2:	08a7f553          	fsub.s	fa0,fa5,fa0
+4ff2ced6:	1207a587          	flw	fa1,288(a5) # 4ff2d120 <call_remote+0x1ba>
+4ff2ceda:	11c72787          	flw	fa5,284(a4) # 4ff2d11c <call_remote+0x1b6>
+4ff2cede:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2cee2:	1247a607          	flw	fa2,292(a5) # 4ff2d124 <call_remote+0x1be>
+4ff2cee6:	10a57553          	fmul.s	fa0,fa0,fa0
+4ff2ceea:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2ceee:	1287a687          	flw	fa3,296(a5) # 4ff2d128 <call_remote+0x1c2>
+4ff2cef2:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2cef6:	12c7a707          	flw	fa4,300(a5) # 4ff2d12c <call_remote+0x1c6>
+4ff2cefa:	58f577c3          	fmadd.s	fa5,fa0,fa5,fa1
+4ff2cefe:	60f577c3          	fmadd.s	fa5,fa0,fa5,fa2
+4ff2cf02:	68f577c3          	fmadd.s	fa5,fa0,fa5,fa3
+4ff2cf06:	70f57543          	fmadd.s	fa0,fa0,fa5,fa4
+4ff2cf0a:	8082                	ret
+4ff2cf0c:	f0000553          	fmv.w.x	fa0,zero
+4ff2cf10:	8082                	ret
+4ff2cf12:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2cf16:	1307a787          	flw	fa5,304(a5) # 4ff2d130 <call_remote+0x1ca>
+4ff2cf1a:	4ff2d737          	lui	a4,0x4ff2d
+4ff2cf1e:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2cf22:	08f57553          	fsub.s	fa0,fa0,fa5
+4ff2cf26:	b785                	j	4ff2ce86 <fastcos+0x44>
+4ff2cf28:	10a57553          	fmul.s	fa0,fa0,fa0
+4ff2cf2c:	4ff2d737          	lui	a4,0x4ff2d
+4ff2cf30:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2cf34:	1207a707          	flw	fa4,288(a5) # 4ff2d120 <call_remote+0x1ba>
+4ff2cf38:	11c72787          	flw	fa5,284(a4) # 4ff2d11c <call_remote+0x1b6>
+4ff2cf3c:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2cf40:	1247a607          	flw	fa2,292(a5) # 4ff2d124 <call_remote+0x1be>
+4ff2cf44:	70f577c3          	fmadd.s	fa5,fa0,fa5,fa4
+4ff2cf48:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2cf4c:	1287a687          	flw	fa3,296(a5) # 4ff2d128 <call_remote+0x1c2>
+4ff2cf50:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2cf54:	12c7a707          	flw	fa4,300(a5) # 4ff2d12c <call_remote+0x1c6>
+4ff2cf58:	60f577c3          	fmadd.s	fa5,fa0,fa5,fa2
+4ff2cf5c:	68f577c3          	fmadd.s	fa5,fa0,fa5,fa3
+4ff2cf60:	70f57543          	fmadd.s	fa0,fa0,fa5,fa4
+4ff2cf64:	8082                	ret
+
+4ff2cf66 <call_remote>:
+4ff2cf66:	711d                	addi	sp,sp,-96
+4ff2cf68:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2cf6c:	c6ce                	sw	s3,76(sp)
+4ff2cf6e:	c4d2                	sw	s4,72(sp)
+4ff2cf70:	c2d6                	sw	s5,68(sp)
+4ff2cf72:	c0da                	sw	s6,64(sp)
+4ff2cf74:	dc62                	sw	s8,56(sp)
+4ff2cf76:	d86a                	sw	s10,48(sp)
+4ff2cf78:	e26a                	fsw	fs10,4(sp)
+4ff2cf7a:	2007ad03          	lw	s10,512(a5) # 4ff2d200 <__binary_end+0xac>
+4ff2cf7e:	2047a983          	lw	s3,516(a5)
+4ff2cf82:	20c7ac03          	lw	s8,524(a5)
+4ff2cf86:	2087ad07          	flw	fs10,520(a5)
+4ff2cf8a:	2107aa03          	lw	s4,528(a5)
+4ff2cf8e:	ce86                	sw	ra,92(sp)
+4ff2cf90:	2147aa83          	lw	s5,532(a5)
+4ff2cf94:	de5e                	sw	s7,60(sp)
+4ff2cf96:	2187ab03          	lw	s6,536(a5)
+4ff2cf9a:	c0002bf3          	rdcycle	s7
+4ff2cf9e:	4511                	li	a0,4
+4ff2cfa0:	0d357c63          	bgeu	a0,s3,4ff2d078 <call_remote+0x112>
+4ff2cfa4:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2cfa8:	e466                	fsw	fs9,8(sp)
+4ff2cfaa:	1387ac87          	flw	fs9,312(a5) # 4ff2d138 <call_remote+0x1d2>
+4ff2cfae:	da66                	sw	s9,52(sp)
+4ff2cfb0:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2cfb4:	4ff2dcb7          	lui	s9,0x4ff2d
+4ff2cfb8:	4ff2d637          	lui	a2,0x4ff2d
+4ff2cfbc:	4ff2d6b7          	lui	a3,0x4ff2d
+4ff2cfc0:	4ff2d737          	lui	a4,0x4ff2d
+4ff2cfc4:	f24a                	fsw	fs2,36(sp)
+4ff2cfc6:	f04e                	fsw	fs3,32(sp)
+4ff2cfc8:	ee52                	fsw	fs4,28(sp)
+4ff2cfca:	ec56                	fsw	fs5,24(sp)
+4ff2cfcc:	ea5a                	fsw	fs6,20(sp)
+4ff2cfce:	e85e                	fsw	fs7,16(sp)
+4ff2cfd0:	119d7cd3          	fmul.s	fs9,fs10,fs9
+4ff2cfd4:	1347ab87          	flw	fs7,308(a5) # 4ff2d134 <call_remote+0x1ce>
+4ff2cfd8:	148cab07          	flw	fs6,328(s9) # 4ff2d148 <call_remote+0x1e2>
+4ff2cfdc:	13c62a87          	flw	fs5,316(a2) # 4ff2d13c <call_remote+0x1d6>
+4ff2cfe0:	1406aa07          	flw	fs4,320(a3) # 4ff2d140 <call_remote+0x1da>
+4ff2cfe4:	14472987          	flw	fs3,324(a4) # 4ff2d144 <call_remote+0x1de>
+4ff2cfe8:	f0000953          	fmv.w.x	fs2,zero
+4ff2cfec:	cca2                	sw	s0,88(sp)
+4ff2cfee:	caa6                	sw	s1,84(sp)
+4ff2cff0:	c8ca                	sw	s2,80(sp)
+4ff2cff2:	f622                	fsw	fs0,44(sp)
+4ff2cff4:	f426                	fsw	fs1,40(sp)
+4ff2cff6:	e662                	fsw	fs8,12(sp)
+4ff2cff8:	4785                	li	a5,1
+4ff2cffa:	a099                	j	4ff2d040 <call_remote+0xda>
+4ff2cffc:	40a98933          	sub	s2,s3,a0
+4ff2d000:	84ce                	mv	s1,s3
+4ff2d002:	148ca407          	flw	fs0,328(s9)
+4ff2d006:	00251413          	slli	s0,a0,0x2
+4ff2d00a:	1441                	addi	s0,s0,-16
+4ff2d00c:	4705                	li	a4,1
+4ff2d00e:	19a47553          	fdiv.s	fa0,fs0,fs10
+4ff2d012:	946a                	add	s0,s0,s10
+4ff2d014:	00e79f63          	bne	a5,a4,4ff2d032 <call_remote+0xcc>
+4ff2d018:	681c                	flw	fa5,16(s0)
+4ff2d01a:	1157f653          	fmul.s	fa2,fa5,fs5
+4ff2d01e:	1147f6d3          	fmul.s	fa3,fa5,fs4
+4ff2d022:	1137f753          	fmul.s	fa4,fa5,fs3
+4ff2d026:	1167f7d3          	fmul.s	fa5,fa5,fs6
+4ff2d02a:	e010                	fsw	fa2,0(s0)
+4ff2d02c:	e054                	fsw	fa3,4(s0)
+4ff2d02e:	e418                	fsw	fa4,8(s0)
+4ff2d030:	e45c                	fsw	fa5,12(s0)
+4ff2d032:	a08517d3          	flt.s	a5,fa0,fs0
+4ff2d036:	e7ad                	bnez	a5,4ff2d0a0 <call_remote+0x13a>
+4ff2d038:	478d                	li	a5,3
+4ff2d03a:	0334f163          	bgeu	s1,s3,4ff2d05c <call_remote+0xf6>
+4ff2d03e:	8526                	mv	a0,s1
+4ff2d040:	012cf7d3          	fadd.s	fa5,fs9,fs2
+4ff2d044:	c0179953          	fcvt.wu.s	s2,fa5,rtz
+4ff2d048:	d0197753          	fcvt.s.wu	fa4,s2
+4ff2d04c:	012504b3          	add	s1,a0,s2
+4ff2d050:	08e7f953          	fsub.s	fs2,fa5,fa4
+4ff2d054:	fa99e4e3          	bltu	s3,s1,4ff2cffc <call_remote+0x96>
+4ff2d058:	fa0915e3          	bnez	s2,4ff2d002 <call_remote+0x9c>
+4ff2d05c:	4466                	lw	s0,88(sp)
+4ff2d05e:	44d6                	lw	s1,84(sp)
+4ff2d060:	4946                	lw	s2,80(sp)
+4ff2d062:	5cd2                	lw	s9,52(sp)
+4ff2d064:	7432                	flw	fs0,44(sp)
+4ff2d066:	74a2                	flw	fs1,40(sp)
+4ff2d068:	7912                	flw	fs2,36(sp)
+4ff2d06a:	7982                	flw	fs3,32(sp)
+4ff2d06c:	6a72                	flw	fs4,28(sp)
+4ff2d06e:	6ae2                	flw	fs5,24(sp)
+4ff2d070:	6b52                	flw	fs6,20(sp)
+4ff2d072:	6bc2                	flw	fs7,16(sp)
+4ff2d074:	6c32                	flw	fs8,12(sp)
+4ff2d076:	6ca2                	flw	fs9,8(sp)
+4ff2d078:	c0002773          	rdcycle	a4
+4ff2d07c:	40f6                	lw	ra,92(sp)
+4ff2d07e:	41770733          	sub	a4,a4,s7
+4ff2d082:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2d086:	26e7ae23          	sw	a4,636(a5) # 4ff2d27c <__binary_end+0x128>
+4ff2d08a:	49b6                	lw	s3,76(sp)
+4ff2d08c:	4a26                	lw	s4,72(sp)
+4ff2d08e:	4a96                	lw	s5,68(sp)
+4ff2d090:	4b06                	lw	s6,64(sp)
+4ff2d092:	5bf2                	lw	s7,60(sp)
+4ff2d094:	5c62                	lw	s8,56(sp)
+4ff2d096:	5d42                	lw	s10,48(sp)
+4ff2d098:	6d12                	flw	fs10,4(sp)
+4ff2d09a:	4501                	li	a0,0
+4ff2d09c:	6125                	addi	sp,sp,96
+4ff2d09e:	8082                	ret
+4ff2d0a0:	117574d3          	fmul.s	fs1,fa0,fs7
+4ff2d0a4:	20948553          	fmv.s	fa0,fs1
+4ff2d0a8:	3b69                	jal	4ff2ce42 <fastcos>
+4ff2d0aa:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2d0ae:	1187a787          	flw	fa5,280(a5) # 4ff2d118 <call_remote+0x1b2>
+4ff2d0b2:	20a50c53          	fmv.s	fs8,fa0
+4ff2d0b6:	0897f553          	fsub.s	fa0,fa5,fs1
+4ff2d0ba:	3361                	jal	4ff2ce42 <fastcos>
+4ff2d0bc:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2d0c0:	14c7a787          	flw	fa5,332(a5) # 4ff2d14c <call_remote+0x1e6>
+4ff2d0c4:	4ff2d7b7          	lui	a5,0x4ff2d
+4ff2d0c8:	1507a607          	flw	fa2,336(a5) # 4ff2d150 <call_remote+0x1ea>
+4ff2d0cc:	0987f6d3          	fsub.s	fa3,fa5,fs8
+4ff2d0d0:	00f57753          	fadd.s	fa4,fa0,fa5
+4ff2d0d4:	10cc7c53          	fmul.s	fs8,fs8,fa2
+4ff2d0d8:	08a7f7d3          	fsub.s	fa5,fa5,fa0
+4ff2d0dc:	85ca                	mv	a1,s2
+4ff2d0de:	1086f453          	fmul.s	fs0,fa3,fs0
+4ff2d0e2:	18e6f6d3          	fdiv.s	fa3,fa3,fa4
+4ff2d0e6:	01040513          	addi	a0,s0,16
+4ff2d0ea:	87da                	mv	a5,s6
+4ff2d0ec:	8756                	mv	a4,s5
+4ff2d0ee:	86d2                	mv	a3,s4
+4ff2d0f0:	8662                	mv	a2,s8
+4ff2d0f2:	18e47453          	fdiv.s	fs0,fs0,fa4
+4ff2d0f6:	00dc2227          	fsw	fa3,4(s8)
+4ff2d0fa:	18e7f7d3          	fdiv.s	fa5,fa5,fa4
+4ff2d0fe:	008c2027          	fsw	fs0,0(s8)
+4ff2d102:	008c2427          	fsw	fs0,8(s8)
+4ff2d106:	18ec7c53          	fdiv.s	fs8,fs8,fa4
+4ff2d10a:	00fc2827          	fsw	fa5,16(s8)
+4ff2d10e:	018c2627          	fsw	fs8,12(s8)
+4ff2d112:	31bd                	jal	4ff2cd80 <dsps_biquad_f32_cascade3_arp4>
+4ff2d114:	b715                	j	4ff2d038 <call_remote+0xd2>
