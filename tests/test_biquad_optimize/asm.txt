@@ -1,195 +1,198 @@
 
-C:\Users\orani\AppData\Local\Temp\esp32_build_74uovx01\output.elf:     file format elf32-littleriscv
+C:\Users\orani\AppData\Local\Temp\esp32_build_dcd80hk9\output.elf:     file format elf32-littleriscv
 
 
 Disassembly of section .text:
 
-4ff24d00 <process_audio>:
-4ff24d00:	bf010113          	addi	sp,sp,-1040
-4ff24d04:	01010313          	addi	t1,sp,16
-4ff24d08:	01050893          	addi	a7,a0,16
-4ff24d0c:	881a                	mv	a6,t1
-4ff24d0e:	09010e13          	addi	t3,sp,144
-4ff24d12:	0008a787          	flw	fa5,0(a7)
-4ff24d16:	0811                	addi	a6,a6,4
-4ff24d18:	0891                	addi	a7,a7,4
-4ff24d1a:	fef82e27          	fsw	fa5,-4(a6)
-4ff24d1e:	ff0e1ae3          	bne	t3,a6,4ff24d12 <process_audio+0x12>
-4ff24d22:	6208                	flw	fa0,0(a2)
-4ff24d24:	00462007          	flw	ft0,4(a2)
-4ff24d28:	00862087          	flw	ft1,8(a2)
-4ff24d2c:	6650                	flw	fa2,12(a2)
-4ff24d2e:	000577d3          	fadd.s	fa5,fa0,ft0
-4ff24d32:	6a0c                	flw	fa1,16(a2)
-4ff24d34:	0006a107          	flw	ft2,0(a3)
-4ff24d38:	0046a187          	flw	ft3,4(a3)
-4ff24d3c:	00072207          	flw	ft4,0(a4)
-4ff24d40:	0017f7d3          	fadd.s	fa5,fa5,ft1
-4ff24d44:	00472387          	flw	ft7,4(a4)
-4ff24d48:	6394                	flw	fa3,0(a5)
-4ff24d4a:	0047a307          	flw	ft6,4(a5)
-4ff24d4e:	00c7f7d3          	fadd.s	fa5,fa5,fa2
-4ff24d52:	00b7f7d3          	fadd.s	fa5,fa5,fa1
-4ff24d56:	e63e                	fsw	fa5,12(sp)
-4ff24d58:	18b05e63          	blez	a1,4ff24ef4 <process_audio+0x1f4>
-4ff24d5c:	20318853          	fmv.s	fa6,ft3
-4ff24d60:	202102d3          	fmv.s	ft5,ft2
-4ff24d64:	00259893          	slli	a7,a1,0x2
-4ff24d68:	01130833          	add	a6,t1,a7
-4ff24d6c:	859a                	mv	a1,t1
-4ff24d6e:	619c                	flw	fa5,0(a1)
-4ff24d70:	1002f753          	fmul.s	fa4,ft5,ft0
-4ff24d74:	0591                	addi	a1,a1,4
-4ff24d76:	785677cb          	fnmsub.s	fa5,fa2,ft5,fa5
-4ff24d7a:	7905f7cb          	fnmsub.s	fa5,fa1,fa6,fa5
-4ff24d7e:	70f57743          	fmadd.s	fa4,fa0,fa5,fa4
-4ff24d82:	7100f743          	fmadd.s	fa4,ft1,fa6,fa4
-4ff24d86:	20528853          	fmv.s	fa6,ft5
-4ff24d8a:	20f782d3          	fmv.s	ft5,fa5
-4ff24d8e:	fee5ae27          	fsw	fa4,-4(a1)
-4ff24d92:	fcb81ee3          	bne	a6,a1,4ff24d6e <process_audio+0x6e>
-4ff24d96:	859a                	mv	a1,t1
-4ff24d98:	619c                	flw	fa5,0(a1)
-4ff24d9a:	10027753          	fmul.s	fa4,ft4,ft0
-4ff24d9e:	0591                	addi	a1,a1,4
-4ff24da0:	784677cb          	fnmsub.s	fa5,fa2,ft4,fa5
-4ff24da4:	7875f7cb          	fnmsub.s	fa5,fa1,ft7,fa5
-4ff24da8:	70f57743          	fmadd.s	fa4,fa0,fa5,fa4
-4ff24dac:	7070f743          	fmadd.s	fa4,ft1,ft7,fa4
-4ff24db0:	204203d3          	fmv.s	ft7,ft4
-4ff24db4:	20f78253          	fmv.s	ft4,fa5
-4ff24db8:	fee5ae27          	fsw	fa4,-4(a1)
-4ff24dbc:	fcb81ee3          	bne	a6,a1,4ff24d98 <process_audio+0x98>
-4ff24dc0:	00032787          	flw	fa5,0(t1)
-4ff24dc4:	1006f753          	fmul.s	fa4,fa3,ft0
-4ff24dc8:	0311                	addi	t1,t1,4
-4ff24dca:	78d677cb          	fnmsub.s	fa5,fa2,fa3,fa5
-4ff24dce:	7865f7cb          	fnmsub.s	fa5,fa1,ft6,fa5
-4ff24dd2:	70f57743          	fmadd.s	fa4,fa0,fa5,fa4
-4ff24dd6:	7060f743          	fmadd.s	fa4,ft1,ft6,fa4
-4ff24dda:	20d68353          	fmv.s	ft6,fa3
-4ff24dde:	20f786d3          	fmv.s	fa3,fa5
-4ff24de2:	fee32e27          	fsw	fa4,-4(t1)
-4ff24de6:	fc681de3          	bne	a6,t1,4ff24dc0 <process_audio+0xc0>
-4ff24dea:	67c2                	flw	fa5,16(sp)
-4ff24dec:	40c12687          	flw	fa3,1036(sp)
-4ff24df0:	6732                	flw	fa4,12(sp)
-4ff24df2:	98aa                	add	a7,a7,a0
-4ff24df4:	00d7f7d3          	fadd.s	fa5,fa5,fa3
-4ff24df8:	85aa                	mv	a1,a0
-4ff24dfa:	882a                	mv	a6,a0
-4ff24dfc:	00e7f7d3          	fadd.s	fa5,fa5,fa4
-4ff24e00:	e43e                	fsw	fa5,8(sp)
-4ff24e02:	67a2                	flw	fa5,8(sp)
-4ff24e04:	c202                	sw	zero,4(sp)
-4ff24e06:	6792                	flw	fa5,4(sp)
-4ff24e08:	01082707          	flw	fa4,16(a6)
-4ff24e0c:	0811                	addi	a6,a6,4
-4ff24e0e:	00e7f7d3          	fadd.s	fa5,fa5,fa4
-4ff24e12:	e23e                	fsw	fa5,4(sp)
-4ff24e14:	ff0899e3          	bne	a7,a6,4ff24e06 <process_audio+0x106>
-4ff24e18:	c0002373          	rdcycle	t1
-4ff24e1c:	882a                	mv	a6,a0
-4ff24e1e:	01082707          	flw	fa4,16(a6)
-4ff24e22:	100177d3          	fmul.s	fa5,ft2,ft0
-4ff24e26:	0811                	addi	a6,a6,4
-4ff24e28:	7026774b          	fnmsub.s	fa4,fa2,ft2,fa4
-4ff24e2c:	7035f14b          	fnmsub.s	ft2,fa1,ft3,fa4
-4ff24e30:	78a177c3          	fmadd.s	fa5,ft2,fa0,fa5
-4ff24e34:	7811f7c3          	fmadd.s	fa5,ft3,ft1,fa5
-4ff24e38:	00f82627          	fsw	fa5,12(a6)
-4ff24e3c:	0006a187          	flw	ft3,0(a3)
-4ff24e40:	0026a027          	fsw	ft2,0(a3)
-4ff24e44:	0036a227          	fsw	ft3,4(a3)
-4ff24e48:	00c62287          	flw	ft5,12(a2)
-4ff24e4c:	01062307          	flw	ft6,16(a2)
-4ff24e50:	6218                	flw	fa4,0(a2)
-4ff24e52:	00462207          	flw	ft4,4(a2)
-4ff24e56:	6614                	flw	fa3,8(a2)
-4ff24e58:	20528653          	fmv.s	fa2,ft5
-4ff24e5c:	206305d3          	fmv.s	fa1,ft6
-4ff24e60:	20e70553          	fmv.s	fa0,fa4
-4ff24e64:	20420053          	fmv.s	ft0,ft4
-4ff24e68:	20d680d3          	fmv.s	ft1,fa3
-4ff24e6c:	fb0899e3          	bne	a7,a6,4ff24e1e <process_audio+0x11e>
-4ff24e70:	631c                	flw	fa5,0(a4)
-4ff24e72:	6350                	flw	fa2,4(a4)
-4ff24e74:	a809                	j	4ff24e86 <process_audio+0x186>
-4ff24e76:	6218                	flw	fa4,0(a2)
-4ff24e78:	00462207          	flw	ft4,4(a2)
-4ff24e7c:	6614                	flw	fa3,8(a2)
-4ff24e7e:	00c62287          	flw	ft5,12(a2)
-4ff24e82:	01062307          	flw	ft6,16(a2)
-4ff24e86:	6908                	flw	fa0,16(a0)
-4ff24e88:	20f785d3          	fmv.s	fa1,fa5
-4ff24e8c:	0511                	addi	a0,a0,4
-4ff24e8e:	50f2f7cb          	fnmsub.s	fa5,ft5,fa5,fa0
-4ff24e92:	1045f5d3          	fmul.s	fa1,fa1,ft4
-4ff24e96:	78c377cb          	fnmsub.s	fa5,ft6,fa2,fa5
-4ff24e9a:	58e7f743          	fmadd.s	fa4,fa5,fa4,fa1
-4ff24e9e:	70c6f6c3          	fmadd.s	fa3,fa3,fa2,fa4
-4ff24ea2:	e554                	fsw	fa3,12(a0)
-4ff24ea4:	6310                	flw	fa2,0(a4)
-4ff24ea6:	e31c                	fsw	fa5,0(a4)
-4ff24ea8:	e350                	fsw	fa2,4(a4)
-4ff24eaa:	fca896e3          	bne	a7,a0,4ff24e76 <process_audio+0x176>
-4ff24eae:	639c                	flw	fa5,0(a5)
-4ff24eb0:	63d8                	flw	fa4,4(a5)
-4ff24eb2:	6994                	flw	fa3,16(a1)
-4ff24eb4:	6650                	flw	fa2,12(a2)
-4ff24eb6:	20f785d3          	fmv.s	fa1,fa5
-4ff24eba:	6a08                	flw	fa0,16(a2)
-4ff24ebc:	68f677cb          	fnmsub.s	fa5,fa2,fa5,fa3
-4ff24ec0:	00462007          	flw	ft0,4(a2)
-4ff24ec4:	6210                	flw	fa2,0(a2)
-4ff24ec6:	6614                	flw	fa3,8(a2)
-4ff24ec8:	1005f5d3          	fmul.s	fa1,fa1,ft0
-4ff24ecc:	78e577cb          	fnmsub.s	fa5,fa0,fa4,fa5
-4ff24ed0:	0591                	addi	a1,a1,4
-4ff24ed2:	58c7f643          	fmadd.s	fa2,fa5,fa2,fa1
-4ff24ed6:	60e6f743          	fmadd.s	fa4,fa3,fa4,fa2
-4ff24eda:	e5d8                	fsw	fa4,12(a1)
-4ff24edc:	6398                	flw	fa4,0(a5)
-4ff24ede:	e39c                	fsw	fa5,0(a5)
-4ff24ee0:	e3d8                	fsw	fa4,4(a5)
-4ff24ee2:	fcb898e3          	bne	a7,a1,4ff24eb2 <process_audio+0x1b2>
-4ff24ee6:	c0002573          	rdcycle	a0
-4ff24eea:	40650533          	sub	a0,a0,t1
-4ff24eee:	41010113          	addi	sp,sp,1040
-4ff24ef2:	8082                	ret
-4ff24ef4:	67c2                	flw	fa5,16(sp)
-4ff24ef6:	40c12687          	flw	fa3,1036(sp)
-4ff24efa:	6732                	flw	fa4,12(sp)
-4ff24efc:	00d7f7d3          	fadd.s	fa5,fa5,fa3
-4ff24f00:	00e7f7d3          	fadd.s	fa5,fa5,fa4
-4ff24f04:	e43e                	fsw	fa5,8(sp)
-4ff24f06:	67a2                	flw	fa5,8(sp)
-4ff24f08:	c202                	sw	zero,4(sp)
-4ff24f0a:	c0002373          	rdcycle	t1
-4ff24f0e:	c0002573          	rdcycle	a0
-4ff24f12:	40650533          	sub	a0,a0,t1
-4ff24f16:	41010113          	addi	sp,sp,1040
-4ff24f1a:	8082                	ret
+4ff25d00 <process_audio>:
+4ff25d00:	bf010113          	addi	sp,sp,-1040
+4ff25d04:	01010313          	addi	t1,sp,16
+4ff25d08:	01050893          	addi	a7,a0,16
+4ff25d0c:	881a                	mv	a6,t1
+4ff25d0e:	09010e13          	addi	t3,sp,144
+4ff25d12:	0008a787          	flw	fa5,0(a7)
+4ff25d16:	0811                	addi	a6,a6,4
+4ff25d18:	0891                	addi	a7,a7,4
+4ff25d1a:	fef82e27          	fsw	fa5,-4(a6)
+4ff25d1e:	ff0e1ae3          	bne	t3,a6,4ff25d12 <process_audio+0x12>
+4ff25d22:	6208                	flw	fa0,0(a2)
+4ff25d24:	00462007          	flw	ft0,4(a2)
+4ff25d28:	00862087          	flw	ft1,8(a2)
+4ff25d2c:	6650                	flw	fa2,12(a2)
+4ff25d2e:	000577d3          	fadd.s	fa5,fa0,ft0
+4ff25d32:	6a0c                	flw	fa1,16(a2)
+4ff25d34:	0006a107          	flw	ft2,0(a3)
+4ff25d38:	0046a187          	flw	ft3,4(a3)
+4ff25d3c:	00072207          	flw	ft4,0(a4)
+4ff25d40:	0017f7d3          	fadd.s	fa5,fa5,ft1
+4ff25d44:	00472387          	flw	ft7,4(a4)
+4ff25d48:	6394                	flw	fa3,0(a5)
+4ff25d4a:	0047a307          	flw	ft6,4(a5)
+4ff25d4e:	00c7f7d3          	fadd.s	fa5,fa5,fa2
+4ff25d52:	00b7f7d3          	fadd.s	fa5,fa5,fa1
+4ff25d56:	e63e                	fsw	fa5,12(sp)
+4ff25d58:	18b05e63          	blez	a1,4ff25ef4 <process_audio+0x1f4>
+4ff25d5c:	20318853          	fmv.s	fa6,ft3
+4ff25d60:	202102d3          	fmv.s	ft5,ft2
+4ff25d64:	00259893          	slli	a7,a1,0x2
+4ff25d68:	01130833          	add	a6,t1,a7
+4ff25d6c:	859a                	mv	a1,t1
+4ff25d6e:	619c                	flw	fa5,0(a1)
+4ff25d70:	1002f753          	fmul.s	fa4,ft5,ft0
+4ff25d74:	0591                	addi	a1,a1,4
+4ff25d76:	785677cb          	fnmsub.s	fa5,fa2,ft5,fa5
+4ff25d7a:	7905f7cb          	fnmsub.s	fa5,fa1,fa6,fa5
+4ff25d7e:	70f57743          	fmadd.s	fa4,fa0,fa5,fa4
+4ff25d82:	7100f743          	fmadd.s	fa4,ft1,fa6,fa4
+4ff25d86:	20528853          	fmv.s	fa6,ft5
+4ff25d8a:	20f782d3          	fmv.s	ft5,fa5
+4ff25d8e:	fee5ae27          	fsw	fa4,-4(a1)
+4ff25d92:	fcb81ee3          	bne	a6,a1,4ff25d6e <process_audio+0x6e>
+4ff25d96:	859a                	mv	a1,t1
+4ff25d98:	619c                	flw	fa5,0(a1)
+4ff25d9a:	10027753          	fmul.s	fa4,ft4,ft0
+4ff25d9e:	0591                	addi	a1,a1,4
+4ff25da0:	784677cb          	fnmsub.s	fa5,fa2,ft4,fa5
+4ff25da4:	7875f7cb          	fnmsub.s	fa5,fa1,ft7,fa5
+4ff25da8:	70f57743          	fmadd.s	fa4,fa0,fa5,fa4
+4ff25dac:	7070f743          	fmadd.s	fa4,ft1,ft7,fa4
+4ff25db0:	204203d3          	fmv.s	ft7,ft4
+4ff25db4:	20f78253          	fmv.s	ft4,fa5
+4ff25db8:	fee5ae27          	fsw	fa4,-4(a1)
+4ff25dbc:	fcb81ee3          	bne	a6,a1,4ff25d98 <process_audio+0x98>
+4ff25dc0:	00032787          	flw	fa5,0(t1)
+4ff25dc4:	1006f753          	fmul.s	fa4,fa3,ft0
+4ff25dc8:	0311                	addi	t1,t1,4
+4ff25dca:	78d677cb          	fnmsub.s	fa5,fa2,fa3,fa5
+4ff25dce:	7865f7cb          	fnmsub.s	fa5,fa1,ft6,fa5
+4ff25dd2:	70f57743          	fmadd.s	fa4,fa0,fa5,fa4
+4ff25dd6:	7060f743          	fmadd.s	fa4,ft1,ft6,fa4
+4ff25dda:	20d68353          	fmv.s	ft6,fa3
+4ff25dde:	20f786d3          	fmv.s	fa3,fa5
+4ff25de2:	fee32e27          	fsw	fa4,-4(t1)
+4ff25de6:	fc681de3          	bne	a6,t1,4ff25dc0 <process_audio+0xc0>
+4ff25dea:	67c2                	flw	fa5,16(sp)
+4ff25dec:	40c12687          	flw	fa3,1036(sp)
+4ff25df0:	6732                	flw	fa4,12(sp)
+4ff25df2:	98aa                	add	a7,a7,a0
+4ff25df4:	00d7f7d3          	fadd.s	fa5,fa5,fa3
+4ff25df8:	85aa                	mv	a1,a0
+4ff25dfa:	882a                	mv	a6,a0
+4ff25dfc:	00e7f7d3          	fadd.s	fa5,fa5,fa4
+4ff25e00:	e43e                	fsw	fa5,8(sp)
+4ff25e02:	67a2                	flw	fa5,8(sp)
+4ff25e04:	c202                	sw	zero,4(sp)
+4ff25e06:	6792                	flw	fa5,4(sp)
+4ff25e08:	01082707          	flw	fa4,16(a6)
+4ff25e0c:	0811                	addi	a6,a6,4
+4ff25e0e:	00e7f7d3          	fadd.s	fa5,fa5,fa4
+4ff25e12:	e23e                	fsw	fa5,4(sp)
+4ff25e14:	ff0899e3          	bne	a7,a6,4ff25e06 <process_audio+0x106>
+4ff25e18:	c0002373          	rdcycle	t1
+4ff25e1c:	882a                	mv	a6,a0
+4ff25e1e:	01082707          	flw	fa4,16(a6)
+4ff25e22:	100177d3          	fmul.s	fa5,ft2,ft0
+4ff25e26:	0811                	addi	a6,a6,4
+4ff25e28:	7026774b          	fnmsub.s	fa4,fa2,ft2,fa4
+4ff25e2c:	7035f14b          	fnmsub.s	ft2,fa1,ft3,fa4
+4ff25e30:	78a177c3          	fmadd.s	fa5,ft2,fa0,fa5
+4ff25e34:	7811f7c3          	fmadd.s	fa5,ft3,ft1,fa5
+4ff25e38:	00f82627          	fsw	fa5,12(a6)
+4ff25e3c:	0006a187          	flw	ft3,0(a3)
+4ff25e40:	0026a027          	fsw	ft2,0(a3)
+4ff25e44:	0036a227          	fsw	ft3,4(a3)
+4ff25e48:	00c62287          	flw	ft5,12(a2)
+4ff25e4c:	01062307          	flw	ft6,16(a2)
+4ff25e50:	6218                	flw	fa4,0(a2)
+4ff25e52:	00462207          	flw	ft4,4(a2)
+4ff25e56:	6614                	flw	fa3,8(a2)
+4ff25e58:	20528653          	fmv.s	fa2,ft5
+4ff25e5c:	206305d3          	fmv.s	fa1,ft6
+4ff25e60:	20e70553          	fmv.s	fa0,fa4
+4ff25e64:	20420053          	fmv.s	ft0,ft4
+4ff25e68:	20d680d3          	fmv.s	ft1,fa3
+4ff25e6c:	fb0899e3          	bne	a7,a6,4ff25e1e <process_audio+0x11e>
+4ff25e70:	631c                	flw	fa5,0(a4)
+4ff25e72:	6350                	flw	fa2,4(a4)
+4ff25e74:	a809                	j	4ff25e86 <process_audio+0x186>
+4ff25e76:	6218                	flw	fa4,0(a2)
+4ff25e78:	00462207          	flw	ft4,4(a2)
+4ff25e7c:	6614                	flw	fa3,8(a2)
+4ff25e7e:	00c62287          	flw	ft5,12(a2)
+4ff25e82:	01062307          	flw	ft6,16(a2)
+4ff25e86:	6908                	flw	fa0,16(a0)
+4ff25e88:	20f785d3          	fmv.s	fa1,fa5
+4ff25e8c:	0511                	addi	a0,a0,4
+4ff25e8e:	50f2f7cb          	fnmsub.s	fa5,ft5,fa5,fa0
+4ff25e92:	1045f5d3          	fmul.s	fa1,fa1,ft4
+4ff25e96:	78c377cb          	fnmsub.s	fa5,ft6,fa2,fa5
+4ff25e9a:	58e7f743          	fmadd.s	fa4,fa5,fa4,fa1
+4ff25e9e:	70c6f6c3          	fmadd.s	fa3,fa3,fa2,fa4
+4ff25ea2:	e554                	fsw	fa3,12(a0)
+4ff25ea4:	6310                	flw	fa2,0(a4)
+4ff25ea6:	e31c                	fsw	fa5,0(a4)
+4ff25ea8:	e350                	fsw	fa2,4(a4)
+4ff25eaa:	fca896e3          	bne	a7,a0,4ff25e76 <process_audio+0x176>
+4ff25eae:	639c                	flw	fa5,0(a5)
+4ff25eb0:	63d8                	flw	fa4,4(a5)
+4ff25eb2:	6994                	flw	fa3,16(a1)
+4ff25eb4:	6650                	flw	fa2,12(a2)
+4ff25eb6:	20f785d3          	fmv.s	fa1,fa5
+4ff25eba:	6a08                	flw	fa0,16(a2)
+4ff25ebc:	68f677cb          	fnmsub.s	fa5,fa2,fa5,fa3
+4ff25ec0:	00462007          	flw	ft0,4(a2)
+4ff25ec4:	6210                	flw	fa2,0(a2)
+4ff25ec6:	6614                	flw	fa3,8(a2)
+4ff25ec8:	1005f5d3          	fmul.s	fa1,fa1,ft0
+4ff25ecc:	78e577cb          	fnmsub.s	fa5,fa0,fa4,fa5
+4ff25ed0:	0591                	addi	a1,a1,4
+4ff25ed2:	58c7f643          	fmadd.s	fa2,fa5,fa2,fa1
+4ff25ed6:	60e6f743          	fmadd.s	fa4,fa3,fa4,fa2
+4ff25eda:	e5d8                	fsw	fa4,12(a1)
+4ff25edc:	6398                	flw	fa4,0(a5)
+4ff25ede:	e39c                	fsw	fa5,0(a5)
+4ff25ee0:	e3d8                	fsw	fa4,4(a5)
+4ff25ee2:	fcb898e3          	bne	a7,a1,4ff25eb2 <process_audio+0x1b2>
+4ff25ee6:	c0002573          	rdcycle	a0
+4ff25eea:	40650533          	sub	a0,a0,t1
+4ff25eee:	41010113          	addi	sp,sp,1040
+4ff25ef2:	8082                	ret
+4ff25ef4:	67c2                	flw	fa5,16(sp)
+4ff25ef6:	40c12687          	flw	fa3,1036(sp)
+4ff25efa:	6732                	flw	fa4,12(sp)
+4ff25efc:	00d7f7d3          	fadd.s	fa5,fa5,fa3
+4ff25f00:	00e7f7d3          	fadd.s	fa5,fa5,fa4
+4ff25f04:	e43e                	fsw	fa5,8(sp)
+4ff25f06:	67a2                	flw	fa5,8(sp)
+4ff25f08:	c202                	sw	zero,4(sp)
+4ff25f0a:	c0002373          	rdcycle	t1
+4ff25f0e:	c0002573          	rdcycle	a0
+4ff25f12:	40650533          	sub	a0,a0,t1
+4ff25f16:	41010113          	addi	sp,sp,1040
+4ff25f1a:	8082                	ret
 
-4ff24f1c <call_remote>:
-4ff24f1c:	4ff405b7          	lui	a1,0x4ff40
-4ff24f20:	9805a503          	lw	a0,-1664(a1) # 4ff3f980 <__binary_end+0x1aa28>
-4ff24f24:	98858613          	addi	a2,a1,-1656
-4ff24f28:	98c58693          	addi	a3,a1,-1652
-4ff24f2c:	99058713          	addi	a4,a1,-1648
-4ff24f30:	99458793          	addi	a5,a1,-1644
-4ff24f34:	98058593          	addi	a1,a1,-1664
-4ff24f38:	4210                	lw	a2,0(a2)
-4ff24f3a:	41cc                	lw	a1,4(a1)
-4ff24f3c:	4294                	lw	a3,0(a3)
-4ff24f3e:	4318                	lw	a4,0(a4)
-4ff24f40:	439c                	lw	a5,0(a5)
-4ff24f42:	1141                	addi	sp,sp,-16
-4ff24f44:	c606                	sw	ra,12(sp)
-4ff24f46:	3b6d                	jal	4ff24d00 <process_audio>
-4ff24f48:	40b2                	lw	ra,12(sp)
-4ff24f4a:	4ff407b7          	lui	a5,0x4ff40
-4ff24f4e:	9ea7ae23          	sw	a0,-1540(a5) # 4ff3f9fc <__binary_end+0x1aaa4>
-4ff24f52:	4501                	li	a0,0
-4ff24f54:	0141                	addi	sp,sp,16
-4ff24f56:	8082                	ret
+4ff25f1c <call_remote>:
+4ff25f1c:	4ff26637          	lui	a2,0x4ff26
+4ff25f20:	86b2                	mv	a3,a2
+4ff25f22:	8732                	mv	a4,a2
+4ff25f24:	87b2                	mv	a5,a2
+4ff25f26:	85b6                	mv	a1,a3
+4ff25f28:	0621                	addi	a2,a2,8 # 4ff26008 <__binary_end+0xb8>
+4ff25f2a:	06b1                	addi	a3,a3,12
+4ff25f2c:	0741                	addi	a4,a4,16
+4ff25f2e:	07d1                	addi	a5,a5,20
+4ff25f30:	4188                	lw	a0,0(a1)
+4ff25f32:	4210                	lw	a2,0(a2)
+4ff25f34:	41cc                	lw	a1,4(a1)
+4ff25f36:	4294                	lw	a3,0(a3)
+4ff25f38:	4318                	lw	a4,0(a4)
+4ff25f3a:	439c                	lw	a5,0(a5)
+4ff25f3c:	1141                	addi	sp,sp,-16
+4ff25f3e:	c606                	sw	ra,12(sp)
+4ff25f40:	33c1                	jal	4ff25d00 <process_audio>
+4ff25f42:	40b2                	lw	ra,12(sp)
+4ff25f44:	4ff267b7          	lui	a5,0x4ff26
+4ff25f48:	dfe8                	sw	a0,124(a5)
+4ff25f4a:	4501                	li	a0,0
+4ff25f4c:	0141                	addi	sp,sp,16
+4ff25f4e:	8082                	ret

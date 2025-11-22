@@ -95,7 +95,7 @@ class Builder:
         return discovered_files
             
     def build(self, source, entry_point, base_address, 
-              optimization=None, output_dir='build'):
+              optimization=None, output_dir='build', use_firmware_elf=False):
         """
         Build position-specific binary from multiple source files.
         
@@ -108,6 +108,7 @@ class Builder:
             base_address (int or str): Base address (int or hex string)
             optimization (str): Optimization level ('O0', 'O1', 'O2', 'O3', 'Os')
             output_dir (str): Output directory for build artifacts
+            use_firmware_elf (bool): Whether to link against firmware ELF symbols (default: False)
             
         Returns:
             BinaryObject: Object containing binary and metadata with methods
@@ -172,7 +173,8 @@ class Builder:
         elf_file = self.compiler.link(
             obj_files=obj_files,
             linker_script=linker_script,
-            output=os.path.join(self.temp_dir, 'output.elf')
+            output=os.path.join(self.temp_dir, 'output.elf'),
+            use_firmware_elf=use_firmware_elf
         )
         print("✓")
         

@@ -1,0 +1,17 @@
+
+C:\Users\orani\AppData\Local\Temp\esp32_build_dg3vtha5\output.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+4ff26a00 <call_remote>:
+4ff26a00:	4ff27537          	lui	a0,0x4ff27
+4ff26a04:	1141                	addi	sp,sp,-16
+4ff26a06:	a1c50513          	addi	a0,a0,-1508 # 4ff26a1c <call_remote+0x1c>
+4ff26a0a:	c606                	sw	ra,12(sp)
+4ff26a0c:	f00f0097          	auipc	ra,0xf00f0
+4ff26a10:	d9a080e7          	jalr	-614(ra) # 400167a6 <printf>
+4ff26a14:	40b2                	lw	ra,12(sp)
+4ff26a16:	4501                	li	a0,0
+4ff26a18:	0141                	addi	sp,sp,16
+4ff26a1a:	8082                	ret

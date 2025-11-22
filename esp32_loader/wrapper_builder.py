@@ -16,7 +16,7 @@ class WrapperBuilder:
         self.config = config
     
     def build_with_wrapper(self, source, function_name, base_address, 
-                          arg_address, output_dir='build'):
+                          arg_address, output_dir='build', use_firmware_elf=False):
         """
         Build function with automatic wrapper generation.
         
@@ -93,7 +93,8 @@ class WrapperBuilder:
         binary = self.builder.build(
             source=temp_c_path,
             entry_point=wrapper_entry,
-            base_address=base_address
+            base_address=base_address,
+            use_firmware_elf=use_firmware_elf
         )
         
         print()

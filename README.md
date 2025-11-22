@@ -270,6 +270,45 @@ This produces a single, highly optimized instruction stream, eliminating functio
 
 ---
 
+### 5.5 Symbol Bridge (Calling Firmware Functions)
+
+The **Symbol Bridge** allows your JIT code to call functions that exist in the main firmware (e.g., `printf`, `esp_timer_get_time`, `heap_caps_malloc`) without re-implementing them.
+
+**Prerequisites**:
+1.  **Configure Firmware ELF**: Set the path to your firmware's ELF file in `config/toolchain.yaml`:
+    ```yaml
+    linker:
+      firmware_elf: "/path/to/p4_jit_firmware.elf"
+    ```
+2.  **Enable in Build**: Pass `use_firmware_elf=True` to the builder.
+
+**Example**:
+```c
+// hello.c
+#include <stdio.h> // Standard header provides signature
+
+void say_hello() {
+    // Calls the firmware's printf at runtime!
+    printf("Hello from JIT!\n"); 
+}
+```
+
+```python
+# Build with Symbol Bridge enabled
+builder.wrapper.build_with_wrapper(
+    source="hello.c", 
+    function_name="say_hello",
+    base_address=code_addr, 
+    arg_address=args_addr,
+    use_firmware_elf=True  # <--- Magic Flag
+)
+```
+
+**How it works**:
+The linker reads the symbol table from the firmware ELF and resolves function calls to their absolute addresses in the device's memory (e.g., `printf` -> `0x400167a6`). This adds **zero overhead** to your JIT binary.
+
+---
+
 ## 6. API Reference
 
 ### `esp32_loader.builder.Builder`

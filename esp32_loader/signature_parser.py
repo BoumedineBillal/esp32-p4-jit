@@ -164,6 +164,12 @@ class SignatureParser:
         parameters = []
         if func_decl.type.args:
             for param in func_decl.type.args.params:
+                # Handle 'void' parameter (e.g. void foo(void))
+                # pycparser represents this as a parameter with type 'void' and no name
+                param_type = self._get_type_string(param.type)
+                if param_type == 'void':
+                    continue
+                    
                 param_info = self._extract_parameter(param)
                 parameters.append(param_info)
         

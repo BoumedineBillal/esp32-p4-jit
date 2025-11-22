@@ -17,7 +17,7 @@ typedef int esp_err_t;
 
 
 esp_err_t call_remote(void) {
-    volatile int32_t *io = (volatile int32_t *)0x4ff3f980;
+    volatile int32_t *io = (volatile int32_t *)0x4ff26000;
 
     // Argument 0: POINTER type float*
     float* readBufferFloat = (float*) io[0];

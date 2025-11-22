@@ -89,7 +89,7 @@ class Compiler:
             
         return output
         
-    def link(self, obj_files, linker_script, output):
+    def link(self, obj_files, linker_script, output, use_firmware_elf=False):
         """
         Link multiple object files with custom linker script.
         
@@ -97,6 +97,7 @@ class Compiler:
             obj_files (list): List of object file paths
             linker_script (str): Path to linker script
             output (str): Path to output ELF file
+            use_firmware_elf (bool): Whether to link against firmware ELF symbols
             
         Returns:
             str: Path to linked ELF file
@@ -104,6 +105,7 @@ class Compiler:
         arch = self.config['compiler']['arch']
         abi = self.config['compiler']['abi']
         linker_flags = self.config['linker']['flags']
+        firmware_elf = self.config.get('linker', {}).get('firmware_elf')
         
         # Use gcc for linking (works for both C and C++ objects)
         cmd = [
@@ -111,7 +113,16 @@ class Compiler:
             f'-march={arch}',
             f'-mabi={abi}',
             f'-T{linker_script}'
-        ] + obj_files + [
+        ]
+        
+        # Add firmware symbols if configured AND enabled
+        if use_firmware_elf and firmware_elf:
+            # Resolve absolute path relative to config file location if needed
+            # But here we assume the user provides a valid path or we handle it in builder
+            # For now, let's just pass it.
+            cmd.append(f'-Wl,-R,{firmware_elf}')
+            
+        cmd += obj_files + [
             '-o', output
         ] + linker_flags
         
