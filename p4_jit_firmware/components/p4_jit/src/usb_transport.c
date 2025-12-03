@@ -1,3 +1,4 @@
+#include "sdkconfig.h"
 #include "usb_transport.h"
 #include "esp_log.h"
 #include "tinyusb.h"
@@ -35,8 +36,13 @@ void usb_transport_init(void)
 {
     ESP_LOGI(TAG, "Initializing USB Transport...");
 
-    // 1. Create Stream Buffer (16KB)
-    rx_stream_buffer = xStreamBufferCreate(16 * 1024, 1);
+    // 1. Create Stream Buffer
+    // Use configured buffer size or default to 16KB if not set
+    #ifndef CONFIG_P4_JIT_STREAM_BUFFER_SIZE
+    #define CONFIG_P4_JIT_STREAM_BUFFER_SIZE (16 * 1024)
+    #endif
+    
+    rx_stream_buffer = xStreamBufferCreate(CONFIG_P4_JIT_STREAM_BUFFER_SIZE, 1);
     if (rx_stream_buffer == NULL) {
         ESP_LOGE(TAG, "Failed to create stream buffer");
         abort();

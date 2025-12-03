@@ -1,0 +1,38 @@
+menu "P4-JIT Configuration"
+
+    config P4_JIT_TASK_STACK_SIZE
+        int "JIT Task Stack Size"
+        default 8192
+        help
+            Stack size for the task handling USB protocol and JIT commands.
+
+    config P4_JIT_TASK_PRIORITY
+        int "JIT Task Priority"
+        default 5
+        help
+            Priority of the JIT task. Higher number = higher priority.
+
+    config P4_JIT_TASK_CORE_ID
+        int "JIT Task Core ID"
+        default 1
+        range -1 1
+        help
+            Core to pin the JIT task to. -1 = No Affinity, 0 = Core 0, 1 = Core 1.
+            Pinning to Core 1 is recommended to leave Core 0 for Wi-Fi/System.
+
+    config P4_JIT_PAYLOAD_BUFFER_SIZE
+        int "JIT Payload Buffer Size"
+        default 1048576
+        help
+            Size of the RX/TX buffers for JIT commands (default 1MB).
+            These are used to hold the code/data being transferred.
+            Allocated from PSRAM if available.
+
+    config P4_JIT_STREAM_BUFFER_SIZE
+        int "USB Stream Buffer Size"
+        default 16384
+        help
+            Size of the internal FreeRTOS StreamBuffer for USB ISR (default 16KB).
+            This is a small FIFO and should be kept relatively small (e.g. 16KB-64KB).
+
+endmenu

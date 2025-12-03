@@ -1,0 +1,58 @@
+# P4-JIT Component Configuration Defaults
+# Append this to your project's sdkconfig.defaults
+
+# ------------------------------------------------------------------------------
+# Memory Protection & JIT Execution (CRITICAL)
+# ------------------------------------------------------------------------------
+# Disable the strict split between Instruction RAM (IRAM) and Data RAM (DRAM).
+# Default is 'y', which marks internal data memory (L2MEM) as Non-Executable.
+# Setting to 'n' UNLOCKS execution from L2MEM (0x4FF...), fixing the crash.
+CONFIG_ESP_SYSTEM_PMP_IDRAM_SPLIT=n
+
+# Explicitly enables Execute-In-Place (XIP) from PSRAM.
+# Required to run code located in external memory via the cache.
+CONFIG_SOC_SPIRAM_XIP_SUPPORTED=y
+
+# ------------------------------------------------------------------------------
+# External RAM (PSRAM) Configuration
+# ------------------------------------------------------------------------------
+# Enables support for external PSRAM chip.
+CONFIG_SPIRAM=y
+
+# Runs PSRAM at 200MHz (max speed).
+CONFIG_SPIRAM_SPEED_200M=y
+
+# ------------------------------------------------------------------------------
+# Cache Configuration
+# ------------------------------------------------------------------------------
+# Allocates 256KB of internal memory for L2 Cache.
+CONFIG_CACHE_L2_CACHE_256KB=y
+
+# Sets cache line size to 128 Bytes.
+CONFIG_CACHE_L2_CACHE_LINE_128B=y
+
+# ------------------------------------------------------------------------------
+# System Safety & Debugging (Watchdogs)
+# ------------------------------------------------------------------------------
+# Disable Interrupt Watchdog.
+CONFIG_ESP_INT_WDT=n
+
+# Disable Task Watchdog.
+CONFIG_ESP_TASK_WDT_EN=n
+
+# Enables experimental features in IDF.
+CONFIG_IDF_EXPERIMENTAL_FEATURES=y
+
+# ------------------------------------------------------------------------------
+# USB / Serial Communication
+# ------------------------------------------------------------------------------
+# Enables the TinyUSB stack for USB communication.
+CONFIG_TINYUSB_CDC_ENABLED=y
+
+# Number of CDC (Serial) ports to expose.
+CONFIG_TINYUSB_CDC_COUNT=1
+
+# Buffer sizes for USB Serial (CDC).
+CONFIG_TINYUSB_CDC_RX_BUFSIZE=2048
+CONFIG_TINYUSB_CDC_TX_BUFSIZE=2048
+CONFIG_TINYUSB_CDC_EP_BUFSIZE=2048

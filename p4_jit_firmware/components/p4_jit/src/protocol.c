@@ -20,7 +20,11 @@ typedef struct {
 #pragma pack(pop)
 
 // Max payload size (1MB + overhead)
+#ifdef CONFIG_P4_JIT_PAYLOAD_BUFFER_SIZE
+#define MAX_PAYLOAD_SIZE (CONFIG_P4_JIT_PAYLOAD_BUFFER_SIZE + 1024)
+#else
 #define MAX_PAYLOAD_SIZE (1024 * 1024 + 1024)
+#endif
 static uint8_t *rx_buffer = NULL;
 static uint8_t *tx_buffer = NULL;
 
