@@ -1,5 +1,8 @@
 import os
+import tempfile
+from ..utils.logger import setup_logger, INFO_VERBOSE
 
+logger = setup_logger(__name__)
 
 class LinkerGenerator:
     """Generates linker scripts from templates."""
@@ -34,9 +37,10 @@ class LinkerGenerator:
         )
         
         if output_path is None:
-            import tempfile
             fd, output_path = tempfile.mkstemp(suffix='.ld', prefix='linker_')
             os.close(fd)
+            
+        logger.log(INFO_VERBOSE, f"Generating linker script at {output_path}")
             
         with open(output_path, 'w') as f:
             f.write(script_content)

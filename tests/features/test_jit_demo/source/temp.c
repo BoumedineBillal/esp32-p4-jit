@@ -4,14 +4,20 @@
 // Arguments: 2 (slots 0-1)
 // Return value: slot 31
 
+
+#include <stdint.h>
 #include "compute.h"  // Include generated header
 
-
+// Wrapper function to handle argument unpacking and return value
+// Args are passed via a memory region (args_addr)
+// [0..N-1]: Arguments
+// [N]: Return value (if any)
 typedef int esp_err_t;
 #define ESP_OK 0
 
+
 esp_err_t call_remote(void) {
-    volatile int32_t *io = (volatile int32_t *)0x48212780;
+    volatile int32_t *io = (volatile int32_t *)0x48211280;
 
     // Argument 0: VALUE type int
     int a = *(int*)& io[0];
@@ -23,7 +29,7 @@ esp_err_t call_remote(void) {
     float result = compute_sum(a, b);
 
     // Write result (float) to slot 31
-    io[31] = *(int32_t*)& result;
+    *(float*)&io[31] = result;
 
     return ESP_OK;
 }

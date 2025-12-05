@@ -13,8 +13,9 @@ from p4jit.runtime.memory_caps import MALLOC_CAP_SPIRAM, MALLOC_CAP_8BIT, MALLOC
 print("Testing Printf with Symbol Bridge...")
 
 # 1. Setup Paths
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-firmware_elf = os.path.join(project_root, 'p4_jit_firmware', 'build', 'p4_jit_firmware.elf')
+# 1. Setup Paths
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+firmware_elf = os.path.join(project_root, 'firmware', 'build', 'p4_jit_firmware.elf')
 
 if not os.path.exists(firmware_elf):
     print(f"Error: Firmware ELF not found at {firmware_elf}")

@@ -47,7 +47,7 @@ linker:
   flags: 
     - "-flto" # Required for LTO to work during linking
     # - "-nostdlib" # Removed to allow linking libgcc for float helpers
-  firmware_elf: "C:/Users/orani/bilel/git_projects/robert_manzke/project1/trys/costume_p4code_binary/P4-JIT/p4_jit_firmware/build/p4_jit_firmware.elf" #null # Path to firmware ELF for symbol resolution (optional)
+  firmware_elf: "firmware/build/p4_jit_firmware.elf" #null # Path to firmware ELF for symbol resolution (optional)
 
 memory:
   max_size: "128K"

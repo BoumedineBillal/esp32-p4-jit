@@ -13,8 +13,8 @@ int sum_array(int8_t *arr, int len) {
     }
     
     // Fake usage to trigger linker error with -nostdlib
-    char buf[10];
-    memset(buf, 7, 10);  // ERROR: undefined reference to `memset`
+    //char buf[10];
+    //memset(buf, 7, 10);  // ERROR: undefined reference to `memset`
     
-    return sum + (int)buf[0];
+    return sum ;//+ (int)buf[0];
 }

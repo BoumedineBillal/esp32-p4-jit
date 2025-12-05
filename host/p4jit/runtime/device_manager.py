@@ -2,6 +2,9 @@ import struct
 import time
 import serial
 from typing import Optional, Tuple, Dict
+from p4jit.utils.logger import setup_logger, INFO_VERBOSE
+
+logger = setup_logger(__name__)
 
 # Protocol Constants
 MAGIC = b'\xA5\x5A'
@@ -30,11 +33,14 @@ class DeviceManager:
 
     def connect(self):
         if self.port:
+            logger.info(f"Connecting to {self.port} at {self.baudrate} baud...")
             self.serial = serial.Serial(self.port, self.baudrate, timeout=1.0)
+            logger.info("Connected.")
 
     def disconnect(self):
         if self.serial and self.serial.is_open:
             self.serial.close()
+            logger.info("Disconnected.")
 
     def _send_packet(self, cmd_id: int, payload: bytes) -> bytes:
         if not self.serial or not self.serial.is_open:
@@ -51,7 +57,7 @@ class DeviceManager:
         checksum &= 0xFFFF
 
         # 3. Send
-        # print(f"TX Header: {header.hex()} Payload: {payload.hex() if payload else ''} Cksum: {checksum:04X}")
+        logger.debug(f">> CMD {cmd_id:02X} | Len: {len(payload)} | Pay: {payload.hex()[:20]}...")
         self.serial.write(header)
         if payload:
             self.serial.write(payload)
@@ -61,31 +67,32 @@ class DeviceManager:
         # Read Magic
         magic = self.serial.read(2)
         if len(magic) < 2:
-            # print("RX Timeout waiting for Magic")
             raise RuntimeError("Timeout waiting for response magic")
             
         if magic != MAGIC:
-            # print(f"RX Invalid Magic: {magic.hex()}")
             raise RuntimeError(f"Invalid response magic: {magic.hex()}")
         
         # Read Header
         resp_header_data = self.serial.read(6) # Cmd(1) + Flags(1) + Len(4)
         if len(resp_header_data) < 6:
+             logger.error("Timeout waiting for header")
              raise RuntimeError("Timeout waiting for header")
 
         resp_cmd, resp_flags, resp_len = struct.unpack('<BB I', resp_header_data)
-        # print(f"RX Header: Cmd={resp_cmd:02X} Flags={resp_flags:02X} Len={resp_len}")
+        logger.debug(f"<< CMD {resp_cmd:02X} | Flags: {resp_flags:02X} | Len: {resp_len}")
 
         # Read Payload
         resp_payload = b''
         if resp_len > 0:
             resp_payload = self.serial.read(resp_len)
             if len(resp_payload) != resp_len:
+                logger.error(f"Timeout waiting for payload. Expected {resp_len}, got {len(resp_payload)}")
                 raise RuntimeError(f"Timeout waiting for payload. Expected {resp_len}, got {len(resp_payload)}")
         
         # Read Checksum
         resp_checksum_data = self.serial.read(2)
         if len(resp_checksum_data) < 2:
+            logger.error("Timeout waiting for checksum")
             raise RuntimeError("Timeout waiting for checksum")
             
         resp_checksum = struct.unpack('<H', resp_checksum_data)[0]
@@ -97,18 +104,19 @@ class DeviceManager:
         if resp_flags == 0x02:
             # Error packet
             err_code = struct.unpack('<I', resp_payload)[0] if len(resp_payload) >= 4 else -1
+            logger.error(f"Device returned error: {err_code}")
             raise RuntimeError(f"Device returned error: {err_code}")
 
         return resp_payload
 
     def ping(self, data: bytes = b'\xCA\xFE\xBA\xBE') -> bool:
         try:
-            # print(f"Pinging {self.port}...")
+            logger.debug(f"Pinging {self.port}...")
             resp = self._send_packet(CMD_PING, data)
-            # print(f"Ping Response: {resp.hex()}")
+            logger.debug(f"Ping Response: {resp.hex()}")
             return resp == data
         except Exception as e:
-            # print(f"Ping failed: {e}")
+            logger.debug(f"Ping failed: {e}")
             return False
 
     def allocate(self, size: int, caps: int, alignment: int) -> int:
@@ -126,6 +134,7 @@ class DeviceManager:
         # Struct: size(4), caps(4), alignment(4)
         payload = struct.pack('<I I I', size, caps, alignment)
         
+        logger.log(INFO_VERBOSE, f"Allocating {size} bytes (caps={caps}, align={alignment})")
         resp = self._send_packet(CMD_ALLOC, payload)
         
         if len(resp) < 8:
@@ -133,13 +142,13 @@ class DeviceManager:
             
         addr, err = struct.unpack('<I I', resp)
         if err != 0:
-            print(f"Wrapper: Allocation Failed! requested_size={size}")
-            print("Tip: Check if available memory is sufficient.")
+            logger.error(f"Wrapper: Allocation Failed! requested_size={size}")
+            logger.error("Tip: Check if available memory is sufficient.")
             try:
                 stats = self.get_heap_info()
-                print("[Heap Status]")
+                logger.info("[Heap Status]")
                 for k, v in stats.items():
-                    print(f"  {k}: {v}")
+                    logger.info(f"  {k}: {v}")
             except:
                 pass
             raise MemoryError(f"Allocation failed on device. Error: {err}")
@@ -151,6 +160,7 @@ class DeviceManager:
             'align': alignment
         }
         
+        logger.debug(f"Allocated {size} bytes at 0x{addr:08X}")
         return addr
 
     def free(self, address: int):
@@ -163,6 +173,7 @@ class DeviceManager:
         
         # Remove from tracking
         del self.allocations[address]
+        logger.debug(f"Freed memory at 0x{address:08X}")
 
     def write_memory(self, address: int, data: bytes):
         # Validation
@@ -175,10 +186,12 @@ class DeviceManager:
                 break
         
         if not valid:
+            logger.error(f"Segmentation Fault: Write to 0x{address:08X} out of bounds")
             raise PermissionError(f"Segmentation Fault: Write to 0x{address:08X} out of bounds")
 
         # Chunking might be needed for large writes, but protocol supports arbitrary len
         # Let's assume USB buffer is handled by OS/Driver.
+        logger.log(INFO_VERBOSE, f"Writing {len(data)} bytes to 0x{address:08X}")
         payload = struct.pack('<I', address) + data
         self._send_packet(CMD_WRITE_MEM, payload)
 
@@ -193,8 +206,10 @@ class DeviceManager:
                 break
         
         if not valid:
+            logger.error(f"Segmentation Fault: Read from 0x{address:08X} out of bounds")
             raise PermissionError(f"Segmentation Fault: Read from 0x{address:08X} out of bounds")
 
+        logger.log(INFO_VERBOSE, f"Reading {size} bytes from 0x{address:08X}")
         payload = struct.pack('<I I', address, size)
         return self._send_packet(CMD_READ_MEM, payload)
 
@@ -214,11 +229,16 @@ class DeviceManager:
                 break
         
         if not valid:
+            logger.error(f"Segmentation Fault: Execute at 0x{address:08X} not in valid region")
             raise PermissionError(f"Segmentation Fault: Execute at 0x{address:08X} not in valid region")
 
+        logger.log(INFO_VERBOSE, f"Executing at 0x{address:08X}")
         payload = struct.pack('<I', address)
         resp = self._send_packet(CMD_EXEC, payload)
-        return struct.unpack('<I', resp)[0]
+        
+        ret_val = struct.unpack('<I', resp)[0]
+        logger.debug(f"Execution finished. Return Value: {ret_val}")
+        return ret_val
 
     def get_heap_info(self) -> Dict[str, int]:
         """

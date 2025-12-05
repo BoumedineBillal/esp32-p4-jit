@@ -4,10 +4,7 @@
 // Auto-generated header for compute_sum
 // Source: compute.c
 
-// Extracted typedefs
-typedef int int32_t;
-typedef unsigned int uint32_t;
-typedef signed char int8_t;
+#include "std_types.h"
 
 // Function declaration
 float compute_sum(int a, int b);

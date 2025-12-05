@@ -17,7 +17,7 @@ typedef int esp_err_t;
 
 
 esp_err_t call_remote(void) {
-    volatile int32_t *io = (volatile int32_t *)0x48211710;
+    volatile int32_t *io = (volatile int32_t *)0x48211760;
 
     // Argument 0: POINTER type uint8_t*
     uint8_t* data = (uint8_t*) io[0];

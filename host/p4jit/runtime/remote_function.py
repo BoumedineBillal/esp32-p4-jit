@@ -1,6 +1,9 @@
 import struct
 from typing import Any, Optional, Dict
 from .smart_args import SmartArgs
+from ..utils.logger import setup_logger, INFO_VERBOSE
+
+logger = setup_logger(__name__)
 
 class RemoteFunction:
     """
@@ -22,8 +25,11 @@ class RemoteFunction:
         """
         Call the remote function.
         """
+        logger.debug(f"Calling remote function at 0x{self.code_addr:08X}")
+        
         if self.smart_args:
             if not self.signature:
+                logger.error("Smart args enabled but no signature provided")
                 raise ValueError("Smart args enabled but no signature provided")
             
             # FRESH HANDLER PER CALL
@@ -32,6 +38,7 @@ class RemoteFunction:
             
             try:
                 # Pack arguments using SmartArgs
+                logger.log(INFO_VERBOSE, "Packing arguments...")
                 args_blob = handler.pack(*args)
                 
                 # Write Arguments

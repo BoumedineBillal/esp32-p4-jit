@@ -1,6 +1,8 @@
 import os
 from .signature_parser import SignatureParser
+from ..utils.logger import setup_logger, INFO_VERBOSE
 
+logger = setup_logger(__name__)
 
 class HeaderGenerator:
     """
@@ -15,6 +17,7 @@ class HeaderGenerator:
         
     def parse_typedefs(self):
         """Extract typedefs from source file."""
+        logger.log(INFO_VERBOSE, f"Extracting typedefs from {self.source_basename}")
         parser = SignatureParser(self.source_file)
         return parser.extract_typedefs()
     
@@ -90,6 +93,7 @@ class HeaderGenerator:
         
         output_path = os.path.join(output_dir, self.header_name)
         
+        logger.log(INFO_VERBOSE, f"Saving header file to {output_path}")
         with open(output_path, 'w') as f:
             f.write(header_content)
         

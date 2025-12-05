@@ -1,5 +1,7 @@
 import os
+from ..utils.logger import setup_logger, INFO_VERBOSE
 
+logger = setup_logger(__name__)
 
 class WrapperGenerator:
     """
@@ -22,6 +24,7 @@ class WrapperGenerator:
         max_args = self.args_array_size - 1
         
         if param_count > max_args:
+            logger.error(f"Arg count validation failed: {param_count} > {max_args}")
             raise ValueError(
                 f"Function '{self.signature['name']}' has {param_count} parameters "
                 f"but args array supports maximum {max_args} arguments.\n"
@@ -191,6 +194,7 @@ typedef int esp_err_t;
         template_file = self.config['wrapper']['template_file']
         output_path = os.path.join(output_dir, template_file)
         
+        logger.log(INFO_VERBOSE, f"Saving wrapper code to {output_path}")
         with open(output_path, 'w') as f:
             f.write(wrapper_code)
         

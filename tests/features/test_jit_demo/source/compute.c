@@ -13,7 +13,7 @@ float compute_sum(int a, int b) {
     
     c = a + b;
     
-    d = c * 3.14f;
+    d = c * 3.14f *0;
     
-    return  d;
+    return  c;
 }

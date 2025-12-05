@@ -32,7 +32,7 @@ esp_err_t call_remote(void) {
     float result = InterpolateWaveHermite(table, index_integral, index_fractional);
 
     // Write result (float) to slot 31
-    io[31] = *(int32_t*)& result;
+    *(float*)&io[31] = result;
 
     return ESP_OK;
 }

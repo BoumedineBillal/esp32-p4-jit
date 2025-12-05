@@ -4,6 +4,7 @@
 // Auto-generated header for process_audio
 // Source: biquad.c
 
+#include "std_types.h"
 
 // Function declaration
 uint32_t process_audio(float* readBufferFloat, int readBufferLength, float* coeffs_lpf, float* w_lpf1, float* w_lpf2, float* w_lpf3);

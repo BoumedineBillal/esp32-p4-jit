@@ -1,7 +1,9 @@
 import subprocess
 import re
 import os
+from ..utils.logger import setup_logger, INFO_VERBOSE
 
+logger = setup_logger(__name__)
 
 class BinaryProcessor:
     """Handles binary post-processing operations."""
@@ -15,23 +17,12 @@ class BinaryProcessor:
     def extract_sections(self, elf_file):
         """
         Extract section information from ELF file.
-        
-        Args:
-            elf_file (str): Path to ELF file
-            
-        Returns:
-            dict: Section information
-                {
-                    '.text': {'address': 0x40800000, 'size': 152, 'type': 'PROGBITS'},
-                    '.rodata': {'address': 0x40800098, 'size': 16, 'type': 'PROGBITS'},
-                    '.data': {'address': 0x408000a8, 'size': 4, 'type': 'PROGBITS'},
-                    '.bss': {'address': 0x408000ac, 'size': 4, 'type': 'NOBITS'}
-                }
         """
         cmd = [self.readelf, '-S', elf_file]
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         if result.returncode != 0:
+            logger.error(f"Section extraction failed:\n{result.stderr}")
             raise RuntimeError(f"Section extraction failed:\n{result.stderr}")
             
         sections = {}
@@ -56,19 +47,14 @@ class BinaryProcessor:
                         'size': size,
                         'type': sect_type
                     }
-                    
+                    logger.debug(f"Found section {name}: 0x{address:08x} ({size} bytes)")
+        
+        logger.log(INFO_VERBOSE, f"Extracted {len(sections)} sections from {os.path.basename(elf_file)}")
         return sections
         
     def pad_bss(self, binary_data, sections):
         """
         Pad binary with zeros for alignment and BSS sections.
-        
-        Args:
-            binary_data (bytes): Raw binary data from ELF
-            sections (dict): Section information
-            
-        Returns:
-            bytes: Binary with alignment padding and BSS appended
         """
         # First, align binary to 4-byte boundary
         alignment_padding = (4 - (len(binary_data) % 4)) % 4
@@ -80,4 +66,6 @@ class BinaryProcessor:
         )
         
         total_padding = alignment_padding + bss_size
+        logger.log(INFO_VERBOSE, f"Padding binary: {alignment_padding} (align) + {bss_size} (bss) = {total_padding} bytes")
+        
         return binary_data + b'\x00' * total_padding

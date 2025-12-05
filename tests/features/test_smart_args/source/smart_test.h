@@ -4,6 +4,7 @@
 // Auto-generated header for smart_test
 // Source: smart_test.c
 
+#include "std_types.h"
 
 // Function declaration
 int smart_test(int* arr, int len, float scale);

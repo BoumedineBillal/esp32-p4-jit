@@ -3,7 +3,9 @@ from .signature_parser import SignatureParser
 from .wrapper_generator import WrapperGenerator
 from .header_generator import HeaderGenerator
 from .metadata_generator import MetadataGenerator
+from ..utils.logger import setup_logger, INFO_VERBOSE
 
+logger = setup_logger(__name__)
 
 class WrapperBuilder:
     """
@@ -16,40 +18,29 @@ class WrapperBuilder:
         self.config = config
     
     def build_with_wrapper(self, source, function_name, base_address, 
-                          arg_address, output_dir='build', use_firmware_elf=False):
+                          arg_address, output_dir=None, use_firmware_elf=True):
         """
         Build function with automatic wrapper generation.
-        
-        Args:
-            source: Original source file containing function
-            function_name: Name of function to wrap
-            base_address: Code load address
-            arg_address: I/O region base address for arguments
-            output_dir: Output directory for binary and metadata
-            
-        Returns:
-            BinaryObject: Built binary with wrapper
-            
-        Raises:
-            ValueError: If function not found or args exceed array size
         """
-        print(f"Wrapper Builder: Generating wrapper for '{function_name}'")
-        print(f"  Source: {source}")
-        print(f"  Code base: 0x{base_address:08x}")
-        print(f"  Args base: 0x{arg_address:08x}")
-        print()
+        # Auto-detect start
+        if output_dir is None:
+             output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(source))), 'build')
+        # Auto-detect end
+
+        logger.info(f"Generating wrapper for '{function_name}'")
+        logger.debug(f"Wrapper Config: Source={source}, CodeBase=0x{base_address:08x}, ArgsBase=0x{arg_address:08x}, OutputDir={output_dir}")
         
         # Parse function signature
         parser = SignatureParser(source)
-        signature = parser.parse_function(function_name)
+        try:
+            signature = parser.parse_function(function_name)
+        except Exception as e:
+            logger.error(f"Failed to parse function signature: {e}")
+            raise e
         
-        print(f"Function signature parsed:")
-        print(f"  Name: {signature['name']}")
-        print(f"  Return: {signature['return_type']}")
-        print(f"  Parameters: {len(signature['parameters'])}")
+        logger.log(INFO_VERBOSE, f"Signature parsed: {signature['name']} -> {signature['return_type']}")
         for idx, param in enumerate(signature['parameters']):
-            print(f"    [{idx}] {param['type']} {param['name']} ({param['category']})")
-        print()
+            logger.log(INFO_VERBOSE, f"  Arg[{idx}] {param['type']} {param['name']} ({param['category']})")
         
         # Validate argument count
         args_array_size = self.config['wrapper']['args_array_size']
@@ -57,53 +48,46 @@ class WrapperBuilder:
         param_count = len(signature['parameters'])
         
         if param_count > max_args:
+            logger.error(f"Parameter count {param_count} exceeds limit {max_args}")
             raise ValueError(
                 f"Function has {param_count} parameters but args array "
                 f"supports max {max_args} (array_size={args_array_size}, "
                 f"last slot reserved for return value)"
             )
         
-        print(f"Validation passed: {param_count} args fit in array (max {max_args})")
-        print()
+        logger.debug(f"Validation successful: {param_count} parameters.")
         
         # Get source directory
         source_dir = os.path.dirname(os.path.abspath(source))
         
         # Generate header file
-        print("Generating header file...")
+        logger.log(INFO_VERBOSE, "Generating header file...")
         header_gen = HeaderGenerator(source, signature)
         header_path = header_gen.save_header(source_dir)
-        print(f"  Generated: {header_path}")
+        logger.debug(f"Generated header: {header_path}")
         
-        # Copy std_types.h to source_dir so the generated header can include it
-        # We assume project root is 3 levels up from this file (host/p4jit/toolchain/wrapper_builder.py)
+        # Copy std_types.h
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
         std_types_src = os.path.join(project_root, 'config', 'std_types.h')
         std_types_dst = os.path.join(source_dir, 'std_types.h')
         
         if os.path.exists(std_types_src):
-            print(f"  Copying std_types.h to {source_dir}")
             import shutil
             shutil.copy2(std_types_src, std_types_dst)
+            logger.debug(f"Copied std_types.h to {source_dir}")
         else:
-            print(f"  Warning: std_types.h not found at {std_types_src}")
+            logger.warning(f"std_types.h not found at {std_types_src}")
             
-        print()
-        
         # Generate wrapper
-        print("Generating wrapper...")
+        logger.log(INFO_VERBOSE, "Generating wrapper C code...")
         wrapper_gen = WrapperGenerator(self.config, signature, source, arg_address)
         temp_c_path = wrapper_gen.save_wrapper(source_dir)
-        print(f"  Generated: {temp_c_path}")
-        print()
+        logger.debug(f"Generated wrapper: {temp_c_path}")
         
-        # Build using existing builder (will discover both files)
+        # Build using existing builder
         wrapper_entry = self.config['wrapper']['wrapper_entry']
         
-        print(f"Building with existing builder...")
-        print(f"  Entry point: {wrapper_entry}")
-        print()
-        
+        logger.info("Building wrapper binary...")
         binary = self.builder.build(
             source=temp_c_path,
             entry_point=wrapper_entry,
@@ -111,10 +95,8 @@ class WrapperBuilder:
             use_firmware_elf=use_firmware_elf
         )
         
-        print()
-        print(f"Generating metadata...")
-        
-        # Generate signature.json
+        # Generate metadata
+        logger.log(INFO_VERBOSE, "Generating metadata...")
         metadata_gen = MetadataGenerator(
             signature, arg_address, base_address, args_array_size
         )
@@ -123,7 +105,6 @@ class WrapperBuilder:
         # Attach metadata to binary object
         binary.metadata = metadata_gen.generate_metadata()
         
-        print(f"  Generated: {signature_path}")
-        print()
+        logger.info(f"Wrapper build complete. Metadata saved to {signature_path}")
         
         return binary

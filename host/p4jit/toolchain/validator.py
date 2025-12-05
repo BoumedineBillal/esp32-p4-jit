@@ -1,3 +1,7 @@
+from ..utils.logger import setup_logger, INFO_VERBOSE
+
+logger = setup_logger(__name__)
+
 class Validator:
     """Validates binary and memory configurations."""
     
@@ -28,9 +32,11 @@ class Validator:
             ValueError: If address is invalid
         """
         if address % self.alignment != 0:
+            logger.error(f"Address 0x{address:08x} not {self.alignment}-byte aligned")
             raise ValueError(f"Address 0x{address:08x} not {self.alignment}-byte aligned")
             
         if address < 0x30100000 and address >= 0x50000000:
+            logger.error(f"Address 0x{address:08x} outside valid memory range")
             raise ValueError(f"Address 0x{address:08x} outside valid memory range")
             
     def validate_source(self, source_file):
@@ -45,6 +51,7 @@ class Validator:
         """
         import os
         if not os.path.exists(source_file):
+            logger.error(f"Source file not found: {source_file}")
             raise FileNotFoundError(f"Source file not found: {source_file}")
             
     def validate_entry_point(self, entry_point):
@@ -58,9 +65,11 @@ class Validator:
             ValueError: If entry point name is invalid
         """
         if not entry_point:
+            logger.error("Entry point cannot be empty")
             raise ValueError("Entry point cannot be empty")
             
         if not entry_point.isidentifier():
+            logger.error(f"Invalid entry point name: {entry_point}")
             raise ValueError(f"Invalid entry point name: {entry_point}")
             
     def validate_output(self, sections, base_address):
@@ -78,9 +87,11 @@ class Validator:
         
         for name, info in sections.items():
             if info['address'] < base_address:
+                logger.error(f"Section {name} below base address")
                 raise ValueError(f"Section {name} below base address")
                 
             total_size += info['size']
             
         if total_size > self.max_size:
+            logger.error(f"Total size {total_size} exceeds max {self.max_size}")
             raise ValueError(f"Total size {total_size} exceeds max {self.max_size}")

@@ -2,7 +2,9 @@ import json
 import shutil
 import subprocess
 import os
+from ..utils.logger import setup_logger, INFO_VERBOSE, logging
 
+logger = setup_logger(__name__)
 
 class BinaryObject:
     """
@@ -86,40 +88,39 @@ class BinaryObject:
     def disassemble(self, output=None, source_intermix=True):
         """
         Disassemble binary.
-        
-        Args:
-            output (str): Output file path. If None, prints to stdout.
-            source_intermix (bool): If True, intermix source code with assembly (pass -S).
         """
         cmd = [self._objdump, '-d']
         if source_intermix:
             cmd.append('-S')
         cmd.append(self._elf_path)
+        
+        logger.log(INFO_VERBOSE, f"Disassembling {os.path.basename(self._elf_path)}")
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         if output:
             os.makedirs(os.path.dirname(output) if os.path.dirname(output) else '.', exist_ok=True)
             with open(output, 'w') as f:
                 f.write(result.stdout)
+            logger.info(f"Disassembly saved to {output}")
         else:
-            print(result.stdout)
+            logger.info(result.stdout)
             
     def print_sections(self):
         """Print section information."""
-        print("Sections:")
+        logger.info("Sections:")
         for name, info in self._sections.items():
-            print(f"  {name:20s} 0x{info['address']:08x}  {info['size']:6d} bytes")
+            logger.info(f"  {name:20s} 0x{info['address']:08x}  {info['size']:6d} bytes")
             
     def print_symbols(self):
         """Print symbol table."""
-        print("Functions:")
+        logger.info("Functions:")
         for func in self.functions:
-            print(f"  {func['name']:30s} 0x{func['address']:08x}  {func['size']:4d} bytes")
+            logger.info(f"  {func['name']:30s} 0x{func['address']:08x}  {func['size']:4d} bytes")
             
     def print_memory_map(self):
         """Print visual memory map with alignment padding."""
-        print(f"Memory Map (Base: 0x{self._base_address:08x}):")
-        print("  " + "─" * 60)
+        logger.info(f"Memory Map (Base: 0x{self._base_address:08x}):")
+        logger.info("  " + "─" * 60)
         
         current_offset = 0
         
@@ -128,16 +129,16 @@ class BinaryObject:
             size = info['size']
             
             # Print the section
-            print(f"  {offset:6d}  │ {name:12s} {size:6d} bytes")
+            logger.info(f"  {offset:6d}  │ {name:12s} {size:6d} bytes")
             
             # Check if padding is needed after this section
             if size % 4 != 0:
                 padding = 4 - (size % 4)
                 padding_offset = offset + size
-                print(f"  {padding_offset:6d}  │ [padding]    {padding:6d} bytes")
+                logger.info(f"  {padding_offset:6d}  │ [padding]    {padding:6d} bytes")
         
-        print("  " + "─" * 60)
-        print(f"  Total: {self.total_size} bytes")
+        logger.info("  " + "─" * 60)
+        logger.info(f"  Total: {self.total_size} bytes")
         
     def get_data(self):
         """Get raw binary data as bytes."""

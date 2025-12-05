@@ -1,6 +1,8 @@
 import json
 import os
+from ..utils.logger import setup_logger, INFO_VERBOSE
 
+logger = setup_logger(__name__)
 
 class MetadataGenerator:
     """
@@ -83,6 +85,7 @@ class MetadataGenerator:
         
         output_path = os.path.join(output_dir, 'signature.json')
         
+        logger.log(INFO_VERBOSE, f"Saving metadata to {output_path}")
         with open(output_path, 'w') as f:
             json.dump(metadata, f, indent=2)
         

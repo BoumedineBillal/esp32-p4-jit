@@ -1,6 +1,8 @@
 import subprocess
 import os
+from ..utils.logger import setup_logger, INFO_VERBOSE
 
+logger = setup_logger(__name__)
 
 class Compiler:
     """Handles compilation and linking operations with multi-file support."""
@@ -26,14 +28,6 @@ class Compiler:
         Compile source file to object file.
         Automatically selects compiler based on file extension.
         Include path is derived from source file directory.
-        
-        Args:
-            source (str): Path to source file (.c, .cpp, .S, .s, etc.)
-            output (str): Path to output object file
-            optimization (str): Optimization level
-            
-        Returns:
-            str: Path to compiled object file
         """
         # Get file extension
         ext = os.path.splitext(source)[1]
@@ -80,27 +74,22 @@ class Compiler:
                 '-o', output
             ] + flags
         
+        logger.log(INFO_VERBOSE, f"Compiling {os.path.basename(source)} with {compiler_name}...")
+        logger.debug(f"Command: {' '.join(cmd)}")
+        
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         if result.returncode != 0:
+            logger.error(f"Compilation failed:\n{result.stderr}")
             raise RuntimeError(
                 f"Compilation failed for {os.path.basename(source)}:\n{result.stderr}"
             )
             
         return output
         
-    def link(self, obj_files, linker_script, output, use_firmware_elf=False):
+    def link(self, obj_files, linker_script, output, use_firmware_elf=True):
         """
         Link multiple object files with custom linker script.
-        
-        Args:
-            obj_files (list): List of object file paths
-            linker_script (str): Path to linker script
-            output (str): Path to output ELF file
-            use_firmware_elf (bool): Whether to link against firmware ELF symbols
-            
-        Returns:
-            str: Path to linked ELF file
         """
         arch = self.config['compiler']['arch']
         abi = self.config['compiler']['abi']
@@ -117,6 +106,12 @@ class Compiler:
         
         # Add firmware symbols if configured AND enabled
         if use_firmware_elf and firmware_elf:
+            if not os.path.exists(firmware_elf):
+                msg = (f"Firmware ELF not found at: {firmware_elf}\n"
+                       f"Please update 'linker: firmware_elf' in 'config/toolchain.yaml' to the correct path.")
+                logger.error(msg)
+                raise FileNotFoundError(msg)
+                
             # Resolve absolute path relative to config file location if needed
             # But here we assume the user provides a valid path or we handle it in builder
             # For now, let's just pass it.
@@ -129,9 +124,13 @@ class Compiler:
         if self.config['linker']['garbage_collection']:
             cmd.append('-Wl,--gc-sections')
             
+        logger.log(INFO_VERBOSE, f"Linking {len(obj_files)} object files...")
+        logger.debug(f"Command: {' '.join(cmd)}")
+        
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         if result.returncode != 0:
+            logger.error(f"Linking failed:\n{result.stderr}")
             raise RuntimeError(f"Linking failed:\n{result.stderr}")
             
         return output
@@ -139,13 +138,6 @@ class Compiler:
     def extract_binary(self, elf_file, output):
         """
         Extract raw binary from ELF file.
-        
-        Args:
-            elf_file (str): Path to ELF file
-            output (str): Path to output binary file
-            
-        Returns:
-            bytes: Raw binary data
         """
         cmd = [
             self.objcopy,
@@ -154,9 +146,11 @@ class Compiler:
             output
         ]
         
+        logger.log(INFO_VERBOSE, f"Extracting binary to {os.path.basename(output)}...")
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         if result.returncode != 0:
+            logger.error(f"Binary extraction failed:\n{result.stderr}")
             raise RuntimeError(f"Binary extraction failed:\n{result.stderr}")
             
         with open(output, 'rb') as f:

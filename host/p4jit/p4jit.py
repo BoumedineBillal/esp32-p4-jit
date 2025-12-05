@@ -7,6 +7,9 @@ from .runtime.device_manager import DeviceManager
 from .runtime.memory_caps import MALLOC_CAP_SPIRAM, MALLOC_CAP_8BIT
 from .toolchain.builder import Builder
 from .toolchain.binary_object import BinaryObject
+from .utils.logger import setup_logger, INFO_VERBOSE
+
+logger = setup_logger(__name__)
 
 class JITFunction:
     """
@@ -61,6 +64,7 @@ class JITFunction:
         Delegates to the persistent RemoteFunction wrapper.
         """
         if not self.valid:
+            logger.error("Attempted to call freed JITFunction")
             raise RuntimeError("JITFunction has been freed and is no longer valid")
 
         return self.remote_func(*args)
@@ -73,10 +77,11 @@ class JITFunction:
             return
 
         try:
+            logger.debug(f"Freeing JITFunction resources (Code: 0x{self.code_addr:08x}, Args: 0x{self.args_addr:08x})")
             self.session.device.free(self.code_addr)
             self.session.device.free(self.args_addr)
         except Exception as e:
-            print(f"Warning: Failed to free JITFunction resources: {e}")
+            logger.warning(f"Failed to free JITFunction resources: {e}")
             
         self.valid = False
 
@@ -90,29 +95,29 @@ class P4JIT:
         """
         Initialize the JIT system.
         """
+        logger.info("Initializing P4JIT System...")
         self.session = JITSession()
         self.session.connect(port) # Auto-detect if port is None
         
         # Initialize Builder
         # Builder loads config internally, but we might want to pass config_path if Builder supported it.
         # Current Builder implementation loads from default relative path.
-        # TODO: Update Builder to accept config_path if needed.
-        # TODO: Update Builder to accept config_path if needed.
         self.builder = Builder() 
+        logger.info("P4JIT Initialized.")
 
     def get_heap_stats(self, print_s: bool = True) -> Dict[str, int]:
         """
         Get current heap memory statistics from the device.
         
         Args:
-            print_s (bool): If True, print stats to stdout. Default is True.
+            print_s (bool): If True, log stats to INFO. Default is True.
         """
         stats = self.session.device.get_heap_info()
         
         if print_s:
-            print("[Heap Params]")
+            logger.info("[Heap Params]")
             for k, v in stats.items():
-                print(f"  {k:<15}: {v:>10} bytes ({v/1024:>6.2f} KB)")
+                logger.info(f"  {k:<15}: {v:>10} bytes ({v/1024:>6.2f} KB)")
                 
         return stats
 
@@ -136,15 +141,12 @@ class P4JIT:
         Builds, allocates, and loads a function.
         """
         
-        # Auto-detect build directory relative to source file if not specified
-        if output_dir is None:
-            output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(source))), 'build')
+        
+        logger.info(f"Loading '{function_name}' from '{os.path.basename(source)}'...")
         
         # 1. Build (Pass 1 - Wrapper Generation & Probe)
         # We need to generate the wrapper first to know the size
-        # The builder.wrapper.build_with_wrapper does this.
-        
-        print(f"[P4JIT] Building '{function_name}' from '{source}' (Opt: -{optimization})...")
+        logger.log(INFO_VERBOSE, f"Pass 1: Preliminary Build (Opt: -{optimization})")
         
         # Pass 1: Build with default/requested addresses to get size
         temp_bin = self.builder.wrapper.build_with_wrapper(
@@ -157,7 +159,7 @@ class P4JIT:
         )
         
         # 2. Allocate
-        print(f"[P4JIT] Allocating memory (Align: {alignment})...")
+        logger.log(INFO_VERBOSE, f"Allocating device memory (Align: {alignment})...")
         
         # Calculate sizes
         # temp_bin.total_size includes text, data, rodata.
@@ -169,11 +171,11 @@ class P4JIT:
         real_code_addr = self.session.device.allocate(alloc_code_size, code_caps, alignment)
         real_args_addr = self.session.device.allocate(alloc_args_size, data_caps, alignment)
         
-        print(f"  Code: 0x{real_code_addr:08X}")
-        print(f"  Args: 0x{real_args_addr:08X}")
+        logger.info(f"  Code Allocated: 0x{real_code_addr:08X} ({alloc_code_size} bytes)")
+        logger.info(f"  Args Allocated: 0x{real_args_addr:08X} ({alloc_args_size} bytes)")
         
         # 3. Link (Pass 2 - Re-build with real addresses)
-        print(f"[P4JIT] Re-linking with real addresses...")
+        logger.log(INFO_VERBOSE, "Pass 2: Re-linking with allocated addresses...")
         final_bin = self.builder.wrapper.build_with_wrapper(
             source=source,
             function_name=function_name,
@@ -184,10 +186,11 @@ class P4JIT:
         )
         
         # 4. Upload
-        print(f"[P4JIT] Uploading binary...")
+        logger.log(INFO_VERBOSE, "Uploading binary to device...")
         self.session.device.write_memory(real_code_addr, final_bin.data)
         
         # 5. Instantiate
+        logger.info("Function loaded successfully.")
         return JITFunction(
             self.session,
             final_bin,

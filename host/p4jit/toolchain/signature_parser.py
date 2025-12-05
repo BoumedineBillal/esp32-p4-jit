@@ -3,6 +3,9 @@ import os
 import sys
 from pycparser import c_parser, c_ast
 from pycparser.plyparser import ParseError
+from ..utils.logger import setup_logger, INFO_VERBOSE
+
+logger = setup_logger(__name__)
 
 class SignatureParser:
     """
@@ -27,7 +30,7 @@ class SignatureParser:
             with open(config_path, 'r') as f:
                 return f.read()
         except FileNotFoundError:
-            print(f"Warning: Standard types config not found at {config_path}")
+            logger.warning(f"Standard types config not found at {config_path}")
             return ""
 
     def parse_function(self, function_name):
@@ -42,6 +45,8 @@ class SignatureParser:
         """
         self.current_function = function_name
         
+        logger.log(INFO_VERBOSE, f"Parsing signature for '{function_name}' in {os.path.basename(self.source_file)}")
+        
         with open(self.source_file, 'r') as f:
             source_code = f.read()
             
@@ -49,6 +54,7 @@ class SignatureParser:
         signature_str = self._extract_signature_string(source_code, function_name)
         
         if not signature_str:
+             logger.error(f"Function '{function_name}' not found in {self.source_file}")
              raise ValueError(f"Function '{function_name}' not found in {self.source_file}")
              
         # Combine standard types and the extracted signature
@@ -62,11 +68,10 @@ class SignatureParser:
         try:
             ast = parser.parse(full_code, filename='<extracted_signature>')
         except Exception as e:
-            print(f"[DEBUG] Parse Error: {e}")
-            print(f"[DEBUG] Code being parsed:\n{full_code}")
+            logger.debug(f"Parse Error: {e}")
+            logger.debug(f"Code being parsed:\n{full_code}")
             raise
-
-            
+        
         # Find the function declaration in the AST
         # It will be the last node usually, or we search for it
         for node in ast.ext:
@@ -77,6 +82,7 @@ class SignatureParser:
             elif isinstance(node, c_ast.FuncDef) and node.decl.name == function_name:
                  return self._extract_signature_from_ast(node)
                  
+        logger.error(f"Parsed successfully but function '{function_name}' node not found in AST")
         raise ValueError(f"Parsed successfully but function '{function_name}' node not found in AST")
 
     def _extract_signature_string(self, source_code, func_name):
@@ -136,7 +142,7 @@ class SignatureParser:
                     
                     # Construct prototype
                     prototype_str = f"{return_type_part} {func_name}{args_part};"
-                    print(f"[DEBUG] Extracted Signature: {prototype_str}")
+                    logger.debug(f"Extracted Signature: {prototype_str}")
                     return prototype_str
                     
         return None
@@ -154,9 +160,9 @@ class SignatureParser:
             debug_path = os.path.join(build_dir, 'extracted_signature.c')
             with open(debug_path, 'w') as f:
                 f.write(content)
-            print(f"[DEBUG] Parsing input saved to: {debug_path}")
+            logger.debug(f"Parsing input saved to: {debug_path}")
         except Exception as e:
-            print(f"[DEBUG] Failed to save debug output: {e}")
+            logger.debug(f"Failed to save debug output: {e}")
 
     def _extract_signature_from_ast(self, func_node):
         """Extract signature information from function AST node."""

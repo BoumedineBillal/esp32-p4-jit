@@ -2,6 +2,7 @@ import yaml
 import tempfile
 import os
 import glob
+from ..utils.logger import setup_logger, INFO_VERBOSE
 
 from .compiler import Compiler
 from .linker_gen import LinkerGenerator
@@ -11,6 +12,7 @@ from .validator import Validator
 from .binary_object import BinaryObject
 from .wrapper_builder import WrapperBuilder
 
+logger = setup_logger(__name__)
 
 class Builder:
     """
@@ -31,9 +33,6 @@ class Builder:
     def __init__(self, config_path='config/toolchain.yaml'):
         """
         Initialize builder with configuration.
-        
-        Args:
-            config_path (str): Path to YAML configuration file
         """
         self.config = self._load_config(config_path)
         self.compiler = Compiler(self.config)
@@ -49,6 +48,7 @@ class Builder:
         self.validator = Validator(self.config)
         
         self.temp_dir = tempfile.mkdtemp(prefix='esp32_build_')
+        logger.debug(f"Builder using temp directory: {self.temp_dir}")
         
         # Add wrapper builder for automatic wrapper generation
         self.wrapper = WrapperBuilder(self, self.config)
@@ -75,12 +75,6 @@ class Builder:
     def _discover_source_files(self, source_dir):
         """
         Discover all compilable source files in directory.
-        
-        Args:
-            source_dir (str): Directory to scan
-            
-        Returns:
-            list: List of absolute paths to source files
         """
         compile_extensions = self.config['extensions']['compile'].keys()
         discovered_files = []
@@ -96,23 +90,9 @@ class Builder:
         return discovered_files
             
     def build(self, source, entry_point, base_address, 
-              optimization=None, output_dir='build', use_firmware_elf=False):
+              optimization=None, output_dir='build', use_firmware_elf=True):
         """
         Build position-specific binary from multiple source files.
-        
-        The builder automatically discovers and compiles all source files
-        in the same directory as the specified source file.
-        
-        Args:
-            source (str): Path to entry source file (determines directory to scan)
-            entry_point (str): Entry point function name
-            base_address (int or str): Base address (int or hex string)
-            optimization (str): Optimization level ('O0', 'O1', 'O2', 'O3', 'Os')
-            output_dir (str): Output directory for build artifacts
-            use_firmware_elf (bool): Whether to link against firmware ELF symbols (default: False)
-            
-        Returns:
-            BinaryObject: Object containing binary and metadata with methods
         """
         if optimization is None:
             optimization = self.config['compiler']['optimization']
@@ -137,9 +117,9 @@ class Builder:
                 f"Supported extensions: {list(self.config['extensions']['compile'].keys())}"
             )
         
-        print(f"Discovered {len(discovered_files)} source file(s):")
+        logger.info(f"Discovered {len(discovered_files)} source file(s) in {source_dir}")
         for src in discovered_files:
-            print(f"  - {os.path.basename(src)}")
+            logger.log(INFO_VERBOSE, f"  - {os.path.basename(src)}")
         
         # Compile each source file to object file
         obj_files = []
@@ -148,7 +128,7 @@ class Builder:
             name_only = os.path.splitext(basename)[0]
             obj_path = os.path.join(self.temp_dir, f'{name_only}.o')
             
-            print(f"Compiling {basename}...", end=' ')
+            logger.log(INFO_VERBOSE, f"Compiling {basename}...")
             
             try:
                 self.compiler.compile(
@@ -157,9 +137,8 @@ class Builder:
                     optimization=optimization
                 )
                 obj_files.append(obj_path)
-                print("✓")
             except RuntimeError as e:
-                print("✗")
+                logger.error(f"Failed to compile {basename}")
                 raise e
         
         # Generate linker script
@@ -168,18 +147,19 @@ class Builder:
             base_address=base_addr,
             memory_size=self.config['memory']['max_size']
         )
+        logger.debug(f"Generated linker script: {linker_script}")
         
         # Link all object files
-        print(f"Linking {len(obj_files)} object file(s)...", end=' ')
+        logger.log(INFO_VERBOSE, f"Linking {len(obj_files)} object file(s)...")
         elf_file = self.compiler.link(
             obj_files=obj_files,
             linker_script=linker_script,
             output=os.path.join(self.temp_dir, 'output.elf'),
             use_firmware_elf=use_firmware_elf
         )
-        print("✓")
         
         # Extract binary
+        logger.log(INFO_VERBOSE, "Extracting binary...")
         raw_bin = self.compiler.extract_binary(
             elf_file=elf_file,
             output=os.path.join(self.temp_dir, 'output.bin')
@@ -192,9 +172,12 @@ class Builder:
         entry_addr = self.extractor.get_function_address(elf_file, entry_point)
         
         if entry_addr is None:
+            logger.error(f"Entry point '{entry_point}' not found in compiled binary")
             raise ValueError(f"Entry point '{entry_point}' not found in compiled binary")
         
         self.validator.validate_output(sections, base_addr)
+        
+        logger.info("Build validation passed")
         
         return BinaryObject(
             binary_data=padded_bin,

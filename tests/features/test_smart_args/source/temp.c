@@ -17,7 +17,7 @@ typedef int esp_err_t;
 
 
 esp_err_t call_remote(void) {
-    volatile int32_t *io = (volatile int32_t *)0x48211c00;
+    volatile int32_t *io = (volatile int32_t *)0x48211680;
 
     // Argument 0: POINTER type int*
     int* arr = (int*) io[0];
