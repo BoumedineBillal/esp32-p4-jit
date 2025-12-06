@@ -2,7 +2,7 @@
 
 **Compile C/C++ on your PC, execute natively on ESP32-P4 — No firmware reflashing required.**
 
-![System Architecture](assets/system-architecture.png)
+![System Architecture](assets/system-architecture.jpeg)
 
 P4-JIT is a sophisticated dynamic code loading system that enables you to write, compile, and execute native RISC-V machine code on the ESP32-P4 microcontroller in seconds, not minutes. Perfect for rapid algorithm development, DSP prototyping, and machine learning kernel optimization.
 
@@ -53,6 +53,11 @@ P4-JIT is a sophisticated dynamic code loading system that enables you to write,
 - **Memory Safe**: Host-side bounds checking prevents device crashes
 
 ---
+
+
+![c function lifecycle diagram](assets/c-function-lifecycle-diagram.jpeg)
+
+
 
 ## ⚠️ CRITICAL: Initial Setup (Do This First!)
 
