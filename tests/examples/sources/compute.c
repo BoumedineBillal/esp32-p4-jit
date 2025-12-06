@@ -6,6 +6,15 @@ static int32_t call_count = 1;
 static int32_t total_sum;
 static const int32_t multipliers[4] = {10, 20, 30, 40};
 
+__attribute__((noinline))
+int32_t mul(int32_t a, int32_t b) {
+
+    __asm__ volatile("ESP.ZERO.QACC");
+
+    return a*b;
+}
+
+
 int32_t compute(int32_t a, int32_t b) {
     call_count++;
     
@@ -16,7 +25,7 @@ int32_t compute(int32_t a, int32_t b) {
     
     total_sum += result;
     
-    return result;
+    return result + mul(8 , 2);
 }
 
 int32_t get_call_count(void) {
@@ -34,13 +43,6 @@ int32_t e = 5;
 int32_t k = 88;
 int32_t d;
 
-__attribute__((noinline))
-int32_t mul(int32_t a, int32_t b) {
-
-    __asm__ volatile("ESP.ZERO.QACC");
-
-    return a*b;
-}
 
 
 int32_t add(int32_t a, int32_t b) {

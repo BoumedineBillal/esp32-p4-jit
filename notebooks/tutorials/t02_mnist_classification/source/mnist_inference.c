@@ -141,35 +141,39 @@ void fc_int32_p4simd(
     int loop_count = in_size >> 4; 
 
     for (int i = 0; i < out_size; i++) {
-        const int8_t* in_ptr = input;
-        int32_t acc_val;
-        int shift_amt = 0; // Shift amount for result extraction
+        // CRITICAL FIX: ESP32-P4 PIE instructions are restricted to the 
+        // a0-a5 (x10-x15) register range. We must force variables into these registers.
+        
+        register const int8_t* in_ptr asm("a0") = input;
+        register const int8_t* cur_w_ptr asm("a1") = w_ptr;
+        register int32_t acc_val asm("a2");
+        register int cnt asm("a3") = loop_count;
+        register int shift_reg asm("a4") = 0;
 
         asm volatile (
-            "esp.zero.accx \n\t"                  // Clear accumulator
-            "lp.setup 0, %[cnt], 1f \n\t"         // Setup HW loop 0
-            "lp.start 0 \n\t"                     // Start HW loop 0
-            "0: \n\t"                             // Loop body start label
-            "esp.vld.128.ip q0, %[in], 16 \n\t"   // Load 16 inputs, ptr+=16
-            "esp.vld.128.ip q1, %[w], 16 \n\t"    // Load 16 weights, ptr+=16
-            "esp.vmulas.s8.accx q0, q1 \n\t"      // Multiply & Accumulate
-            "1: \n\t"                             // Loop end label
-            "esp.srs.accx %[res], %[shft], 0 \n\t" // Extract result to GPR
+            "esp.zero.xacc \n\t"                   // Clear accumulator
+            "esp.lp.setup 0, %[cnt], 1f \n\t"      // Setup HW loop 0
+            "0: \n\t"                              // Loop start label
+            "esp.vld.128.ip q0, %[in], 16 \n\t"    // Load 16 inputs (uses a0)
+            "esp.vld.128.ip q1, %[w], 16 \n\t"     // Load 16 weights (uses a1)
+            "esp.vmulas.s8.xacc q0, q1 \n\t"       // Multiply & Accumulate
+            "1: \n\t"                              // Loop end label
+            "esp.srs.s.xacc %[res], %[shft] \n\t"  // Extract result (uses a2, a4)
 
             // Output Operands
-            : [res] "=r" (acc_val),       // Output: Result value
-              [in]  "+r" (in_ptr),        // Read/Write: Input pointer
-              [w]   "+r" (w_ptr)          // Read/Write: Weight pointer
+            : [res] "=r" (acc_val),       // Mapped to a2
+              [in]  "+r" (in_ptr),        // Mapped to a0
+              [w]   "+r" (cur_w_ptr)      // Mapped to a1
             
             // Input Operands
-            : [cnt] "r" (loop_count),     // Input: Loop count
-              [shft] "r" (shift_amt)      // Input: Shift amount (0)
+            : [cnt] "r" (cnt),            // Mapped to a3
+              [shft] "r" (shift_reg)      // Mapped to a4
             
             // Clobbers
             : "memory"
         );
 
-        // Post-processing: Add bias and scale (Scalar operations)
+        w_ptr = cur_w_ptr; 
         output[i] = acc_val + ((int32_t)bias[i] << exp_in);
     }
 }

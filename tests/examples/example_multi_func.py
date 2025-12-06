@@ -26,6 +26,7 @@ def main():
         base_address=0x40800000,
         optimization='O3'
     )
+    binary.disassemble("asm.txt", False)
     
     print(f"\n✓ Build successful!")
     
