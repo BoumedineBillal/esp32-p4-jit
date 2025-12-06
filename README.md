@@ -1027,10 +1027,15 @@ CONFIG_TINYUSB_CDC_ENABLED=y
 
 ## 📖 Documentation
 
-- **[Technical Reference Manual (TRM.md)](docs/TRM.md)** - Complete system specification
-- **[Limitations (LIMITATIONS.md)](docs/LIMITATIONS.md)** - Type system, threading, alignment constraints
-- **[Extended Limitations (LIMITATIONS_EXTENDED.md)](docs/LIMITATIONS_EXTENDED.md)** - L2MEM execution, PMP
-- **[Smart Args Guide (SMART_ARGS.md)](docs/SMART_ARGS.md)** - Detailed Smart Args documentation
+- **[Technical Reference Manual (TRM.md)](TRM.md)** – Complete and up-to-date system specification
+
+> **Note:**  
+> The documents below come from the early prototype phase of the project. Some of the information inside them is outdated or flat-out wrong.  
+> The authoritative, correct, fully maintained documentation is the **TRM** above.
+
+- **[Limitations (LIMITATIONS.md)](docs_debr/LIMITATIONS.md)** – (Old) Type system, threading, alignment constraints  
+- **[Extended Limitations (LIMITATIONS_EXTENDED.md)](docs_debr/LIMITATIONS_EXTENDED.md)** – (Old) L2MEM execution, PMP  
+- **[Smart Args Guide (SMART_ARGS.md)](docs_debr/SMART_ARGS.md)** – (Old) Smart Args documentation
 
 ---
 
