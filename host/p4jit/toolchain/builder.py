@@ -59,9 +59,24 @@ class Builder:
             # Calculate project root from this file: host/p4jit/toolchain/builder.py -> ../../../
             base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
             config_path = os.path.join(base_dir, config_path)
+        else:
+            # If absolute path provided, assume project root is parent of config directory
+            # e.g. /path/to/project/config/toolchain.yaml -> /path/to/project
+            base_dir = os.path.dirname(os.path.dirname(config_path))
             
         with open(config_path, 'r') as f:
-            return yaml.safe_load(f)
+            config = yaml.safe_load(f)
+            
+        # Post-process paths to ensure they are absolute
+        # Fix firmware_elf path relative to project root
+        linker_config = config.get('linker', {})
+        fw_elf = linker_config.get('firmware_elf')
+        if fw_elf and not os.path.isabs(fw_elf):
+             abs_fw_elf = os.path.join(base_dir, fw_elf)
+             linker_config['firmware_elf'] = abs_fw_elf
+             logger.debug(f"Resolved firmware_elf path: {abs_fw_elf}")
+             
+        return config
             
     def _parse_address(self, address):
         """Parse address from int or hex string."""

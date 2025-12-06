@@ -1,0 +1,99 @@
+
+C:\Users\orani\AppData\Local\Temp\esp32_build_y3yv2m5h\output.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+48210ae0 <call_remote>:
+48210ae0:	7179                	addi	sp,sp,-48
+48210ae2:	482117b7          	lui	a5,0x48211
+48210ae6:	48211537          	lui	a0,0x48211
+48210aea:	d226                	sw	s1,36(sp)
+48210aec:	c0450513          	addi	a0,a0,-1020 # 48210c04 <.done+0xe>
+48210af0:	d487a483          	lw	s1,-696(a5) # 48210d48 <__binary_end+0x64>
+48210af4:	d606                	sw	ra,44(sp)
+48210af6:	d422                	sw	s0,40(sp)
+48210af8:	d04a                	sw	s2,32(sp)
+48210afa:	e622                	fsw	fs0,12(sp)
+48210afc:	ce4e                	sw	s3,28(sp)
+48210afe:	d407a403          	lw	s0,-704(a5)
+48210b02:	d4c7a407          	flw	fs0,-692(a5)
+48210b06:	d447a903          	lw	s2,-700(a5)
+48210b0a:	f7e06097          	auipc	ra,0xf7e06
+48210b0e:	352080e7          	jalr	850(ra) # 40016e5c <printf>
+48210b12:	48211537          	lui	a0,0x48211
+48210b16:	85a6                	mv	a1,s1
+48210b18:	c2450513          	addi	a0,a0,-988 # 48210c24 <.done+0x2e>
+48210b1c:	f7e06097          	auipc	ra,0xf7e06
+48210b20:	340080e7          	jalr	832(ra) # 40016e5c <printf>
+48210b24:	20840553          	fmv.s	fa0,fs0
+48210b28:	079f0097          	auipc	ra,0x79f0
+48210b2c:	c70080e7          	jalr	-912(ra) # 4fc00798 <__extendsfdf2>
+48210b30:	862a                	mv	a2,a0
+48210b32:	48211537          	lui	a0,0x48211
+48210b36:	86ae                	mv	a3,a1
+48210b38:	c4450513          	addi	a0,a0,-956 # 48210c44 <.done+0x4e>
+48210b3c:	f7e06097          	auipc	ra,0xf7e06
+48210b40:	320080e7          	jalr	800(ra) # 40016e5c <printf>
+48210b44:	48211537          	lui	a0,0x48211
+48210b48:	85a2                	mv	a1,s0
+48210b4a:	c6050513          	addi	a0,a0,-928 # 48210c60 <.done+0x6a>
+48210b4e:	f7e06097          	auipc	ra,0xf7e06
+48210b52:	30e080e7          	jalr	782(ra) # 40016e5c <printf>
+48210b56:	48211537          	lui	a0,0x48211
+48210b5a:	85ca                	mv	a1,s2
+48210b5c:	c7850513          	addi	a0,a0,-904 # 48210c78 <.done+0x82>
+48210b60:	f7e06097          	auipc	ra,0xf7e06
+48210b64:	2fc080e7          	jalr	764(ra) # 40016e5c <printf>
+48210b68:	c00029f3          	rdcycle	s3
+48210b6c:	20840553          	fmv.s	fa0,fs0
+48210b70:	85ca                	mv	a1,s2
+48210b72:	8522                	mv	a0,s0
+48210b74:	8626                	mv	a2,s1
+48210b76:	20ad                	jal	48210be0 <vector_scale_asm>
+48210b78:	c0002473          	rdcycle	s0
+48210b7c:	48211537          	lui	a0,0x48211
+48210b80:	41340433          	sub	s0,s0,s3
+48210b84:	85a2                	mv	a1,s0
+48210b86:	c9450513          	addi	a0,a0,-876 # 48210c94 <.done+0x9e>
+48210b8a:	f7e06097          	auipc	ra,0xf7e06
+48210b8e:	2d2080e7          	jalr	722(ra) # 40016e5c <printf>
+48210b92:	d004f7d3          	fcvt.s.w	fa5,s1
+48210b96:	d0147553          	fcvt.s.wu	fa0,s0
+48210b9a:	18f57553          	fdiv.s	fa0,fa0,fa5
+48210b9e:	079f0097          	auipc	ra,0x79f0
+48210ba2:	bfa080e7          	jalr	-1030(ra) # 4fc00798 <__extendsfdf2>
+48210ba6:	862a                	mv	a2,a0
+48210ba8:	48211537          	lui	a0,0x48211
+48210bac:	86ae                	mv	a3,a1
+48210bae:	cbc50513          	addi	a0,a0,-836 # 48210cbc <.done+0xc6>
+48210bb2:	f7e06097          	auipc	ra,0xf7e06
+48210bb6:	2aa080e7          	jalr	682(ra) # 40016e5c <printf>
+48210bba:	482117b7          	lui	a5,0x48211
+48210bbe:	50b2                	lw	ra,44(sp)
+48210bc0:	da87ae23          	sw	s0,-580(a5) # 48210dbc <__binary_end+0xd8>
+48210bc4:	5422                	lw	s0,40(sp)
+48210bc6:	5492                	lw	s1,36(sp)
+48210bc8:	5902                	lw	s2,32(sp)
+48210bca:	49f2                	lw	s3,28(sp)
+48210bcc:	6432                	flw	fs0,12(sp)
+48210bce:	4501                	li	a0,0
+48210bd0:	6145                	addi	sp,sp,48
+48210bd2:	8082                	ret
+	...
+
+48210be0 <vector_scale_asm>:
+48210be0:	ca19                	beqz	a2,48210bf6 <.done>
+
+48210be2 <.loop>:
+48210be2:	00052007          	flw	ft0,0(a0)
+48210be6:	10a07053          	fmul.s	ft0,ft0,fa0
+48210bea:	0005a027          	fsw	ft0,0(a1)
+48210bee:	0511                	addi	a0,a0,4
+48210bf0:	0591                	addi	a1,a1,4
+48210bf2:	167d                	addi	a2,a2,-1
+48210bf4:	f67d                	bnez	a2,48210be2 <.loop>
+
+48210bf6 <.done>:
+48210bf6:	8082                	ret
+	...
